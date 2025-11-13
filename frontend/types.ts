@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-export type ImageType = 'Wax' | 'Cast' | 'Final';
+export type ImageType = 'Wax' | 'Cast' | 'Final' | 'Wax_alt' | 'Cast_alt' | 'Final_alt';;
 
 export interface ImageState {
   id: string;

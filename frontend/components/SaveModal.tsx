@@ -4,24 +4,29 @@
 */
 
 import React, { useState, useEffect } from 'react';
-import { ImageType } from '../types';
+// We no longer import ImageType, as 'type' will be a more general string
+// import { ImageType } from '../types'; 
 
 interface SaveModalProps {
     isOpen: boolean;
     onClose: () => void;
-    // --- [FIX 1] SKU is now a string (Varchar) ---
-    onSave: (sku: string, type: ImageType) => void; 
+    // --- [CHANGED] onSave now accepts 'type' as a string ---
+    // This allows it to be "Wax", "Cast", "Final", "Wax_alt", etc.
+    onSave: (sku: string, type: string) => void;
     itemType: 'Image' | 'Description';
     isSaving: boolean;
 }
 
 const SaveModal: React.FC<SaveModalProps> = ({ isOpen, onClose, onSave, itemType, isSaving }) => {
     const [sku, setSku] = useState('');
-    const [type, setType] = useState<ImageType>('Wax');
+    // --- [CHANGED] 'type' is now a generic string, defaulting to "Wax" ---
+    const [type, setType] = useState<string>('Wax');
 
     useEffect(() => {
         if (isOpen) {
+            // Reset state when modal opens
             setSku('');
+            // Default to 'Wax' for both types
             setType('Wax');
         }
     }, [isOpen]);
@@ -30,23 +35,47 @@ const SaveModal: React.FC<SaveModalProps> = ({ isOpen, onClose, onSave, itemType
 
     const handleSave = () => {
         if (sku.trim() && type) {
-            // This now correctly sends a string
+            // This now correctly sends a string (e.g., "Wax_alt")
             onSave(sku.trim(), type); 
         }
+    };
+
+    // --- [NEW] This function renders the correct options ---
+    const renderOptions = () => {
+        if (itemType === 'Image') {
+            return (
+                <>
+                    <option value="Wax">Wax Image</option>
+                    <option value="Cast">Cast Image</option>
+                    <option value="Final">Final Image</option>
+                </>
+            );
+        }
+        
+        // itemType === 'Description'
+        return (
+            <>
+                <option value="Wax">Wax Description</option>
+                <option value="Cast">Cast Description</option>
+                <option value="Final">Final Description</option>
+                <option value="Wax_alt">Wax Alt Text</option>
+                <option value="Cast_alt">Cast Alt Text</option>
+                <option value="Final_alt">Final Alt Text</option>
+            </>
+        );
     };
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center animate-fade-in backdrop-blur-sm" onClick={onClose}>
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 shadow-2xl w-full max-w-md flex flex-col gap-6" onClick={e => e.stopPropagation()}>
                 <h2 className="text-2xl font-bold text-gray-100">Save {itemType} to Database</h2>
-                <p className="text-gray-400">Enter the product SKU. The product must already exist in the database.</p>
+                <p className="text-gray-400">Enter the product SKU and select the save location. The product must already exist.</p>
                 
                 <div className="flex flex-col gap-2">
                     <label htmlFor="sku" className="font-semibold text-gray-300">SKU Number (Varchar)</label>
                     <input
                         id="sku"
-                        // --- [FIX 2] Change type to "text" ---
-                        type="text" 
+                        type="text" // Your DB schema is Varchar
                         value={sku}
                         onChange={e => setSku(e.target.value)}
                         placeholder="e.g., ABC-12345"
@@ -55,28 +84,17 @@ const SaveModal: React.FC<SaveModalProps> = ({ isOpen, onClose, onSave, itemType
                 </div>
                 
                 <div className="flex flex-col gap-2">
-                    <label htmlFor="type" className="font-semibold text-gray-300">Type</label>
+                    <label htmlFor="type" className="font-semibold text-gray-300">Save Location</label>
                     <select
                         id="type"
                         value={type}
-                        onChange={e => setType(e.target.value as ImageType)}
+                        onChange={e => setType(e.target.value)}
                         className="bg-gray-900 border border-gray-600 text-gray-200 rounded-lg p-3 text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition w-full"
                     >
-                        <option value="Wax">Wax</option>
-                        <option value="Cast">Cast</option>
-                        <option value="Final">Final</option>
+                        {/* --- [NEW] Call the renderOptions function --- */}
+                        {renderOptions()}
                     </select>
                 </div>
-
-                {/* NOTE: Your App.tsx has logic for 'saveAsPreImage' but your modal
-                  doesn't have the checkbox. The backend code I wrote *supports* it,
-                  but the frontend App.tsx will never send 'true' because the
-                  SaveModal.tsx doesn't have the checkbox.
-                  
-                  Your App.tsx `handleSaveToDb` also has a bug where it's
-                  expecting 'saveAsPreImage' but the modal doesn't send it.
-                  I will fix this in the next file.
-                */}
 
                 <div className="flex items-center justify-end gap-4 mt-4">
                     <button
