@@ -27,12 +27,13 @@ const dataURLtoFile = (dataurl: string, filename: string): File => {
     if (!mimeMatch || !mimeMatch[1]) throw new Error("Could not parse MIME type from data URL");
     const mime = mimeMatch[1];
     const bstr = atob(arr[1]);
+  
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
     while(n--){ u8arr[n] = bstr.charCodeAt(n); }
     return new File([u8arr], filename, {type:mime});
 }
-const imageFileToWebPFile = (imageFile: File, quality: number = 0.9): Promise<File> => {
+const imageFileToWebPFile = (imageFile: File, quality: number = 1): Promise<File> => {
     return new Promise((resolve, reject) => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(imageFile);
@@ -366,14 +367,82 @@ const App: React.FC = () => {
       }
   };
 
-  // ... (handleUndo, handleRedo, handleReset, handleUploadNew, handleDownload, handleImageClick are unchanged) ...
-  const handleUndo = useCallback(() => { /* ... (unchanged) ... */ }, [canUndo, selectedImageId]);
-  const handleRedo = useCallback(() => { /* ... (unchanged) ... */ }, [canRedo, selectedImageId]);
-  const handleReset = useCallback(() => { /* ... (unchanged) ... */ }, [selectedImageState]);
-  const handleUploadNew = useCallback(() => { /* ... (unchanged) ... */ }, []);
-  const handleDownload = useCallback(async () => { /* ... (unchanged) ... */ }, [currentImage]);
-  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => { /* ... (unchanged) ... */ };
+  const handleUndo = useCallback(() => {
+    if (canUndo) {
+      updateSelectedImage(img => ({ ...img, historyIndex: img.historyIndex - 1 }));
+      setEditHotspot(null);
+      setDisplayHotspot(null);
+    }
+  }, [canUndo, selectedImageId]);
 
+  const handleRedo = useCallback(() => {
+    if (canRedo) {
+      updateSelectedImage(img => ({ ...img, historyIndex: img.historyIndex + 1 }));
+      setEditHotspot(null);
+      setDisplayHotspot(null);
+    }
+  }, [canRedo, selectedImageId]);
+
+  const handleReset = useCallback(() => {
+    if (selectedImageState && selectedImageState.history.length > 0) {
+      updateSelectedImage(img => ({ ...img, historyIndex: 0 }));
+      setError(null);
+      setEditHotspot(null);
+      setDisplayHotspot(null);
+    }
+  }, [selectedImageState]);
+
+  const handleUploadNew = useCallback(() => {
+    setImages([]);
+    setSelectedImageId(null);
+    setError(null);
+    setPrompt('');
+    setEditHotspot(null);
+    setDisplayHotspot(null);
+  }, []);
+
+  const handleDownload = useCallback(async () => {
+    if (currentImage) {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const webpFile = await imageFileToWebPFile(currentImage);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(webpFile);
+        const newFileName = currentImage.name.replace(/\.[^/.]+$/, "") + ".webp";
+        link.download = `edited-${newFileName}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      } catch(err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(`Failed to convert to WebP for download. ${errorMessage}`);
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [currentImage]);
+
+  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (activeTab !== 'retouch') return;
+    const img = e.currentTarget;
+    const rect = img.getBoundingClientRect();
+
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    setDisplayHotspot({ x: offsetX, y: offsetY });
+    const { naturalWidth, naturalHeight, clientWidth, clientHeight } = img;
+
+    const scaleX = naturalWidth / clientWidth;
+    const scaleY = naturalHeight / clientHeight;
+
+    const originalX = Math.round(offsetX * scaleX);
+    const originalY = Math.round(offsetY * scaleY);
+    setEditHotspot({ x: originalX, y: originalY });
+ };
 
   const renderEditorContent = () => {
     if (error) {
