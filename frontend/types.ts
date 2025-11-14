@@ -3,7 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-export type ImageType = 'Wax' | 'Cast' | 'Final' | 'Wax_alt' | 'Cast_alt' | 'Final_alt';;
+export type ImageType = 'Wax' | 'Cast' | 'Final';
+
+// The tabs available in the Description Panel
+export type DescriptionTab = 'Description' | 'Alt Description' | 'Meta Description';
+
+// The specific targets where text can be saved in the DB
+export type DescriptionType = 
+    | 'Wax_description' | 'Cast_description' | 'Final_description'
+    | 'Wax_alt' | 'Cast_alt' | 'Final_alt'
+    | 'Meta_title' | 'Meta_description';
 
 export interface ImageState {
   id: string;

@@ -17,7 +17,7 @@ import ImageListPanel from './components/ImageListPanel';
 import SaveModal from './components/SaveModal';
 import { UndoIcon, RedoIcon, EyeIcon, SaveIcon } from './components/icons';
 import StartScreen from './components/StartScreen';
-import { ImageState, ImageType } from './types'; // ImageType is 'Wax' | 'Cast' | 'Final'
+import { ImageState, ImageType, DescriptionTab } from './types'; // ImageType is 'Wax' | 'Cast' | 'Final'
 
 // ... (dataURLtoFile and imageFileToWebPFile helpers are unchanged) ...
 const dataURLtoFile = (dataurl: string, filename: string): File => {
@@ -83,6 +83,7 @@ const App: React.FC = () => {
   const [itemToSave, setItemToSave] = useState<ItemToSave | null>(null);
 
   // --- [NEW] State for the description prompt ---
+  const [descriptionTab, setDescriptionTab] = useState<DescriptionTab>('Description');
   const [descriptionPrompt, setDescriptionPrompt] = useState<string>('');
 
   const selectedImageState = images.find(img => img.id === selectedImageId) ?? null;
@@ -278,6 +279,19 @@ const App: React.FC = () => {
     addImageToHistory(newImageFile);
 
   }, [completedCrop, addImageToHistory]);
+
+  // This sets a default prompt based on the selected tab
+  const handleDescriptionTabChange = (tab: DescriptionTab) => {
+    setDescriptionTab(tab);
+    // Set context-aware default prompts
+    if (tab === 'Description') {
+        setDescriptionPrompt("Write a concise, engaging product description highlighting key features.");
+    } else if (tab === 'Alt Description') {
+        setDescriptionPrompt("Write a short alt text describing the visual appearance of the product for accessibility.");
+    } else if (tab === 'Meta Description') {
+        setDescriptionPrompt("Write a SEO-friendly meta description including call to action, under 160 characters.");
+    }
+  };
 
   const handleGenerateDescription = useCallback(async (prompt: string) => {
     if (!currentImage) {
@@ -587,6 +601,9 @@ const App: React.FC = () => {
                 onDescriptionChange={(newDesc) => 
                   updateSelectedImage(img => ({ ...img, description: newDesc, isDescriptionSaved: false }))
                 }
+                // New Props
+                activeTab={descriptionTab}
+                onTabChange={handleDescriptionTabChange}
               />
             }
         </div>
@@ -646,6 +663,7 @@ const App: React.FC = () => {
         onClose={() => setIsSaveModalOpen(false)}
         onSave={handleSaveToDb}
         itemType={itemToSave?.type || 'Image'}
+        descriptionTab={descriptionTab}
         isSaving={isSaving}
       />
     </div>
