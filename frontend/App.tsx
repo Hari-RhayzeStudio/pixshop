@@ -135,20 +135,42 @@ const App: React.FC = () => {
     setCompletedCrop(undefined);
   }, [selectedImageId]);
 
-  const handleFilesUpload = useCallback((files: FileList) => {
+  // Inside frontend/App.tsx component
+
+  const handleFilesUpload = useCallback(async (files: FileList) => {
     setError(null);
-    const newImages: ImageState[] = Array.from(files).map(file => ({
-      id: `${file.name}-${Date.now()}-${Math.random()}`,
-      originalFile: file,
-      history: [file],
-      historyIndex: 0,
-      description: null,
-      isDescriptionSaved: false,
-    }));
+    
+    // --- [CHANGED] Process files to force 1024x1024 Square ---
+    const processedFilesPromises = Array.from(files).map(async (file) => {
+        try {
+            // This ensures the input to the AI is 1024x1024, 
+            // so the AI output will also be 1024x1024.
+            const squareFile = await resizeToSquare(file);
+            
+            return {
+                id: `${file.name}-${Date.now()}-${Math.random()}`,
+                originalFile: squareFile, // Use the square file
+                history: [squareFile],    // Use the square file
+                historyIndex: 0,
+                description: null,
+                isDescriptionSaved: false,
+            } as ImageState;
+        } catch (e) {
+            console.error("Failed to resize image", e);
+            return null;
+        }
+    });
+
+    const newImagesResults = await Promise.all(processedFilesPromises);
+    // Filter out any failed processing attempts
+    const newImages = newImagesResults.filter((img): img is ImageState => img !== null);
+
     setImages(prevImages => [...prevImages, ...newImages]);
+    
     if (!selectedImageId && newImages.length > 0) {
       setSelectedImageId(newImages[0].id);
     }
+
     setEditHotspot(null);
     setDisplayHotspot(null);
     setActiveTab('retouch');
@@ -279,6 +301,52 @@ const App: React.FC = () => {
     addImageToHistory(newImageFile);
 
   }, [completedCrop, addImageToHistory]);
+
+  // Add this to frontend/App.tsx
+
+// Helper to center-crop and resize any image to exactly 1024x1024
+const resizeToSquare = (imageFile: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(imageFile);
+        img.src = url;
+        
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            // Set fixed dimensions 1024x1024
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            if (!ctx) {
+                reject(new Error("Could not get canvas context"));
+                return;
+            }
+
+            // Calculate center crop
+            const scale = Math.max(1024 / img.naturalWidth, 1024 / img.naturalHeight);
+            const x = (1024 / 2) - (img.naturalWidth / 2) * scale;
+            const y = (1024 / 2) - (img.naturalHeight / 2) * scale;
+
+            // Draw high quality
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, x, y, img.naturalWidth * scale, img.naturalHeight * scale);
+
+            // Convert back to File
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const resizedFile = new File([blob], "square-1024.png", { type: "image/png" });
+                    resolve(resizedFile);
+                } else {
+                    reject(new Error("Canvas to Blob failed"));
+                }
+            }, 'image/png', 1.0);
+        };
+        
+        img.onerror = (err) => reject(err);
+    });
+};
 
   // This sets a default prompt based on the selected tab
   const handleDescriptionTabChange = (tab: DescriptionTab) => {

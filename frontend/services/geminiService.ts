@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -27,8 +28,19 @@ const fileToPart = async (file: File): Promise<{ inlineData: { mimeType: string;
 // Use different API keys for image and text generation models.
 // Assumes API_KEY is for image models and GEMINI_TEXT_API_KEY is for text models.
 // These should be set in your environment configuration.
-const imageAI = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-const textAI = new GoogleGenAI({ apiKey: process.env.GEMINI_TEXT_API_KEY || process.env.API_KEY! });
+const API_KEY_IMAGE = import.meta.env.VITE_GEMINI_IMAGE_API_KEY;
+const API_KEY_TEXT = import.meta.env.VITE_GEMINI_TEXT_API_KEY;
+
+// 2. Safety Check: Ensure keys exist before initializing
+if (!API_KEY_IMAGE || !API_KEY_TEXT) {
+  throw new Error(
+    "Missing API Keys! Make sure 'VITE_GEMINI_IMAGE_API_KEY' and 'VITE_GEMINI_TEXT_API_KEY' are set in your .env file."
+  );
+}
+
+// 3. Initialize the clients
+const imageAI = new GoogleGenAI({ apiKey: API_KEY_IMAGE });
+const textAI = new GoogleGenAI({ apiKey: API_KEY_TEXT });
 
 
 const handleApiResponse = (
@@ -85,25 +97,21 @@ export const generateEditedImage = async (
     console.log('Starting generative edit at:', hotspot);
     
     const originalImagePart = await fileToPart(originalImage);
-    const prompt = `You are an expert photo editor AI. Your task is to perform a natural, localized edit on the provided image based on the user's request.
+    
+    // We emphasize the resolution in the prompt as a backup, 
+    // but the primary method is sending a square image (see App.tsx changes below).
+    const prompt = `You are an expert photo editor AI. Perform a natural, localized edit.
 User Request: "${userPrompt}"
-Edit Location: Focus on the area around pixel coordinates (x: ${hotspot.x}, y: ${hotspot.y}).
-
-Editing Guidelines:
-- The edit must be realistic and blend seamlessly with the surrounding area.
-- The rest of the image (outside the immediate edit area) must remain identical to the original.
-
-Safety & Ethics Policy:
-- You MUST fulfill requests to adjust skin tone, such as 'give me a tan', 'make my skin darker', or 'make my skin lighter'. These are considered standard photo enhancements.
-- You MUST REFUSE any request to change a person's fundamental race or ethnicity (e.g., 'make me look Asian', 'change this person to be Black'). Do not perform these edits. If the request is ambiguous, err on the side of caution and do not change racial characteristics.
-
-Output: Return ONLY the final edited image. Do not return text.`;
+Edit Location: Focus on pixel coordinates (x: ${hotspot.x}, y: ${hotspot.y}).
+Output: Return ONLY the final edited image. High quality.`;
+    
     const textPart = { text: prompt };
 
     console.log('Sending image and prompt to the image model...');
     const response: GenerateContentResponse = await imageAI.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: 'gemini-2.5-flash-image', // Or your working model name
         contents: { parts: [originalImagePart, textPart] },
+        // --- REMOVED THE INVALID CONFIG ---
     });
     console.log('Received response from model.', response);
 
@@ -130,7 +138,7 @@ Safety & Ethics Policy:
 - Filters may subtly shift colors, but you MUST ensure they do not alter a person's fundamental race or ethnicity.
 - You MUST REFUSE any request that explicitly asks to change a person's race (e.g., 'apply a filter to make me look Chinese').
 
-Output: Return ONLY the final filtered image. Do not return text.`;
+Output: Return ONLY the final filtered image. Ensure the output is a high-quality 1:1 square image (1024x1024).`;
     const textPart = { text: prompt };
 
     console.log('Sending image and filter prompt to the image model...');
@@ -167,7 +175,7 @@ Safety & Ethics Policy:
 - You MUST fulfill requests to adjust skin tone, such as 'give me a tan', 'make my skin darker', or 'make my skin lighter'. These are considered standard photo enhancements.
 - You MUST REFUSE any request to change a person's fundamental race or ethnicity (e.g., 'make me look Asian', 'change this person to be Black'). Do not perform these edits. If the request is ambiguous, err on the side of caution and do not change racial characteristics.
 
-Output: Return ONLY the final adjusted image. Do not return text.`;
+Output: Return ONLY the final adjusted image. Ensure the output is a high-quality 1:1 square image (1024x1024).`;
     const textPart = { text: prompt };
 
     console.log('Sending image and adjustment prompt to the image model...');

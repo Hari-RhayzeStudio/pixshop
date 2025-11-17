@@ -15,7 +15,7 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // --- PostgreSQL Connection Pool ---
-const pool = new Pool(); // Reads PGUSER, PGHOST, etc. from .env
+const pool = new Pool(); 
 
 pool.connect()
     .then(client => {
@@ -27,11 +27,10 @@ pool.connect()
         process.exit(1);
     });
 
-// --- [NEW] GCS / S3 Client Initialization ---
-// Reads credentials from .env as requested
+// --- GCS / S3 Client Initialization ---
 const s3Client = new S3Client({
     region: 'auto',
-    endpoint: 'https://storage.googleapis.com', // GCS S3-compatible endpoint
+    endpoint: 'https://storage.googleapis.com', 
     credentials: {
         accessKeyId: process.env.GCS_HMAC_ACCESS_ID,
         secretAccessKey: process.env.GCS_HMAC_SECRET,
@@ -39,7 +38,8 @@ const s3Client = new S3Client({
 });
 
 const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME;
-const CDN_BASE_URL = process.env.CDN_BASE_URL;
+// Ensure this is set in .env: e.g., https://storage.googleapis.com/my-bucket-name
+const CDN_BASE_URL = process.env.CDN_BASE_URL; 
 
 if (!GCS_BUCKET_NAME || !CDN_BASE_URL) {
     console.error("CRITICAL ERROR: GCS_BUCKET_NAME or CDN_BASE_URL is missing in .env");
@@ -49,8 +49,8 @@ console.log('--------------------------');
 
 // --- Middleware ---
 app.use(cors());
-app.use(express.json());
-// Use memoryStorage to keep file buffers in memory for S3 upload
+app.use(express.json({ limit: '50mb' })); // Increased limit
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 const upload = multer({ storage: multer.memoryStorage() });
 
 // --- Helper Function: Upload to Cloud Storage ---
@@ -60,13 +60,13 @@ async function uploadToCloud(fileBuffer, filename, mimeType) {
         Key: filename,
         Body: fileBuffer,
         ContentType: mimeType,
-        // ACL: 'public-read', // Uncomment if your bucket isn't uniformly public
+        // ACL: 'public-read', // Use this only if your bucket permissions require explicit ACLs per object
     };
 
     try {
         const command = new PutObjectCommand(uploadParams);
         await s3Client.send(command);
-        // Construct the final public URL
+        // Construct the final public URL using the ENV variable
         return `${CDN_BASE_URL}/${filename}`;
     } catch (err) {
         console.error("S3 Upload Error:", err);
@@ -114,7 +114,7 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 return res.status(400).json({ success: false, message: 'No image file provided.' });
             }
 
-            // --- [CHANGED] Perform Real Cloud Upload ---
+            // --- Perform Cloud Upload ---
             const file = req.files.image[0];
             // Generate a clean filename: sku-type-timestamp.webp
             const filename = `${sku}-${type.toLowerCase()}-${Date.now()}.webp`;
@@ -127,7 +127,7 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
             updateFields.push(`${fieldToUpdate} = $${paramIndex++}`);
             queryParams.push(imageUrl);
 
-            // Handle Pre-Image Logic (Original Image Upload)
+            // Handle Pre-Image Logic
             if (req.files.originalImage && req.files.originalImage[0] && !product.pre_image_url) {
                 const originalFile = req.files.originalImage[0];
                 const preImageFilename = `${sku}-pre-image-${Date.now()}-original.webp`;
@@ -144,6 +144,7 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 return res.status(400).json({ success: false, message: 'No description text provided.' });
             }
             
+            // Map the frontend "DescriptionType" to database columns
             const fieldMap = {
                 'Wax_description': 'wax_description',
                 'Cast_description': 'cast_description',
@@ -174,7 +175,7 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
         
         console.log('[DB] Update successful.');
         
-        res.json({ success: true, message: `Successfully updated ${dataType} for SKU "${sku}".` });
+        res.json({ success: true, message: `Successfully updated ${dataType} for SKU "${sku}" (${type}).` });
 
     } catch (error) {
         console.error('[API] Error during product update:', error);
