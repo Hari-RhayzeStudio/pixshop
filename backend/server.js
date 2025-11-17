@@ -8,12 +8,14 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const { Pool } = require('pg');
+// --- [NEW] S3 Client for Google Cloud Storage ---
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 // --- PostgreSQL Connection Pool ---
-const pool = new Pool(); 
+const pool = new Pool(); // Reads PGUSER, PGHOST, etc. from .env
 
 pool.connect()
     .then(client => {
@@ -25,30 +27,67 @@ pool.connect()
         process.exit(1);
     });
 
+// --- [NEW] GCS / S3 Client Initialization ---
+// Reads credentials from .env as requested
+const s3Client = new S3Client({
+    region: 'auto',
+    endpoint: 'https://storage.googleapis.com', // GCS S3-compatible endpoint
+    credentials: {
+        accessKeyId: process.env.GCS_HMAC_ACCESS_ID,
+        secretAccessKey: process.env.GCS_HMAC_SECRET,
+    },
+});
+
+const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME;
+const CDN_BASE_URL = process.env.CDN_BASE_URL;
+
+if (!GCS_BUCKET_NAME || !CDN_BASE_URL) {
+    console.error("CRITICAL ERROR: GCS_BUCKET_NAME or CDN_BASE_URL is missing in .env");
+}
+
 console.log('--------------------------');
 
 // --- Middleware ---
 app.use(cors());
 app.use(express.json());
+// Use memoryStorage to keep file buffers in memory for S3 upload
 const upload = multer({ storage: multer.memoryStorage() });
+
+// --- Helper Function: Upload to Cloud Storage ---
+async function uploadToCloud(fileBuffer, filename, mimeType) {
+    const uploadParams = {
+        Bucket: GCS_BUCKET_NAME,
+        Key: filename,
+        Body: fileBuffer,
+        ContentType: mimeType,
+        // ACL: 'public-read', // Uncomment if your bucket isn't uniformly public
+    };
+
+    try {
+        const command = new PutObjectCommand(uploadParams);
+        await s3Client.send(command);
+        // Construct the final public URL
+        return `${CDN_BASE_URL}/${filename}`;
+    } catch (err) {
+        console.error("S3 Upload Error:", err);
+        throw new Error(`Failed to upload to cloud storage: ${err.message}`);
+    }
+}
+
 
 // --- API Routes ---
 
 app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'originalImage', maxCount: 1 }]), async (req, res) => {
     
     const { sku } = req.params; 
-    // type is now one of our specific DescriptionType strings (e.g., 'Wax_alt', 'Meta_title')
     const { type, dataType, description } = req.body;
-    const { PG_TABLE, CDN_BASE_URL } = process.env;
+    const { PG_TABLE } = process.env;
 
     console.log(`\n[API] Received PATCH request for SKU: ${sku}`);
     console.log(`[API] Type: ${type}, DataType: ${dataType}`);
 
     if (!PG_TABLE) {
         return res.status(500).json({ success: false, message: "Server config error: PG_TABLE missing." });
-    }
-    if (!CDN_BASE_URL && dataType === 'Image') {
-        console.warn("Warning: CDN_BASE_URL is not set in .env. Using fallback.");
     }
 
     let client;
@@ -65,7 +104,7 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
         
         const product = findResult.rows[0];
 
-        // 2. Prepare Database Update Payload
+        // 2. Prepare Database Update
         const updateFields = []; 
         const queryParams = [sku]; 
         let paramIndex = 2; 
@@ -74,18 +113,28 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
             if (!req.files || !req.files.image || !req.files.image[0]) {
                 return res.status(400).json({ success: false, message: 'No image file provided.' });
             }
+
+            // --- [CHANGED] Perform Real Cloud Upload ---
+            const file = req.files.image[0];
+            // Generate a clean filename: sku-type-timestamp.webp
+            const filename = `${sku}-${type.toLowerCase()}-${Date.now()}.webp`;
             
-            // Use CDN_BASE_URL from env
-            const baseUrl = CDN_BASE_URL || 'https://cdn.example.com';
-            const fieldToUpdate = `${type.toLowerCase()}_image_url`; // e.g., wax_image_url
-            const imageUrl = `${baseUrl}/images/${sku}-${type.toLowerCase()}-${Date.now()}.webp`;
+            console.log(`[Cloud] Uploading ${filename} to bucket...`);
+            const imageUrl = await uploadToCloud(file.buffer, filename, file.mimetype);
+            console.log(`[Cloud] Upload successful. URL: ${imageUrl}`);
             
+            const fieldToUpdate = `${type.toLowerCase()}_image_url`;
             updateFields.push(`${fieldToUpdate} = $${paramIndex++}`);
             queryParams.push(imageUrl);
 
-            // Handle Pre-Image logic
+            // Handle Pre-Image Logic (Original Image Upload)
             if (req.files.originalImage && req.files.originalImage[0] && !product.pre_image_url) {
-                const preImageUrl = `${baseUrl}/images/${sku}-pre-image-${Date.now()}-original.webp`;
+                const originalFile = req.files.originalImage[0];
+                const preImageFilename = `${sku}-pre-image-${Date.now()}-original.webp`;
+                
+                console.log(`[Cloud] Uploading Pre-Image ${preImageFilename}...`);
+                const preImageUrl = await uploadToCloud(originalFile.buffer, preImageFilename, originalFile.mimetype);
+                
                 updateFields.push(`pre_image_url = $${paramIndex++}`);
                 queryParams.push(preImageUrl);
             }
@@ -95,7 +144,6 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 return res.status(400).json({ success: false, message: 'No description text provided.' });
             }
             
-            // Map the frontend "DescriptionType" to database columns
             const fieldMap = {
                 'Wax_description': 'wax_description',
                 'Cast_description': 'cast_description',
@@ -115,12 +163,9 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
             
             updateFields.push(`${fieldToUpdate} = $${paramIndex++}`);
             queryParams.push(description);
-
-        } else {
-            return res.status(400).json({ success: false, message: 'Invalid dataType provided.' });
         }
 
-        // 3. Add 'modified_at' field
+        // 3. Update 'modified_at'
         updateFields.push(`modified_at = NOW()`);
         
         // 4. Execute Query
