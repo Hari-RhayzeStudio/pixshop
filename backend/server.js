@@ -15,11 +15,11 @@ const app = express();
 const port = process.env.PORT || 3002;
 
 // --- PostgreSQL Connection Pool ---
-const pool = new Pool();
-// const pool = new Pool({
-//   connectionString: process.env.DATABASE_URL,
-//   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-// }) 
+// const pool = new Pool();
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+}) 
 
 pool.connect()
     .then(client => {
