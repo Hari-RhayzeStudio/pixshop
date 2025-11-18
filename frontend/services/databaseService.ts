@@ -8,7 +8,8 @@
 
 // The backend server URL.
 // const API_BASE_URL = 'http://localhost:3001';
-const API_BASE_URL='https://pixshop-backend-hqg9.onrender.com/';
+// const API_BASE_URL='https://pixshop-backend-hqg9.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /**
  * Updates a product in the database by sending data to the backend API.
