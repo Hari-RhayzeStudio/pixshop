@@ -1,0 +1,55 @@
+name: 🚀 Deploy Vite to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main # Triggers on push to the main branch
+
+permissions:
+  contents: 'read' # Required to checkout the code
+  id-token: 'write' # CRITICAL: Required for Workload Identity Federation
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use a stable Node version
+
+      - name: Install Dependencies
+        # Assuming package.json is in the root directory
+        run: npm install
+
+      # -----------------------------------------------------------
+      # 1. AUTHENTICATE with Workload Identity Federation (Keyless)
+      # -----------------------------------------------------------
+    #   - name: Authenticate Google Cloud
+    #     uses: google-github-actions/auth@v2
+    #     with:
+    #       # Your WIF Pool Path (from Step 4 of your manual setup)
+    #       workload_identity_provider: 'projects/975282367233/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+    #       # Your Service Account Email (from Step 2 of your manual setup)
+    #       service_account: 'github-action-sa@rhayze-pixshop.iam.gserviceaccount.com'
+
+      # 2. BUILD the Vite application
+      - name: Build Vite App
+        # This command creates the final optimized code in the 'dist' folder
+        run: npm run build
+        
+      # 3. DEPLOY to Firebase Hosting
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+        #   repoToken: '${{ secrets.GITHUB_TOKEN }}' # Standard GitHub token
+        #   projectID: rhayze-pixshop # Your GCP Project ID
+        #   channelId: live
+            args: deploy --only hosting --project rhayze-pixshop
+        env:
+           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}    
+          # CRITICAL: This deploys the built 'dist' folder
+          # The Firebase CLI automatically finds the 'dist' directory based on your firebase.json
