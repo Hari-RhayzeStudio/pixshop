@@ -30,7 +30,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onFileSelect }) => {
     >
       <div className="flex flex-col items-center gap-6 animate-fade-in">
         <h1 className="text-5xl font-extrabold tracking-tight text-gray-100 sm:text-6xl md:text-7xl">
-          AI-Powered Photo Editing, <span className="text-blue-400">Simplified</span>.
+          Design Your Own Jewelry
         </h1>
         <p className="max-w-2xl text-lg text-gray-400 md:text-xl">
           Retouch photos, apply creative filters, or make professional adjustments using simple text prompts. No complex tools needed.
