@@ -8,18 +8,16 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const { Pool } = require('pg');
-// --- [NEW] S3 Client for Google Cloud Storage ---
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const app = express();
 const port = process.env.PORT || 3002;
 
 // --- PostgreSQL Connection Pool ---
-// const pool = new Pool();
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-}) 
+});
 
 pool.connect()
     .then(client => {
@@ -42,8 +40,15 @@ const s3Client = new S3Client({
 });
 
 const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME;
-// Ensure this is set in .env: e.g., https://storage.googleapis.com/my-bucket-name
 const CDN_BASE_URL = process.env.CDN_BASE_URL; 
+
+// --- [NEW] Read Folder Config ---
+const FOLDERS = {
+    pre: process.env.GCS_FOLDER_PRE || 'pre',
+    wax: process.env.GCS_FOLDER_WAX || 'wax',
+    cast: process.env.GCS_FOLDER_CAST || 'cast',
+    final: process.env.GCS_FOLDER_FINAL || 'final',
+};
 
 if (!GCS_BUCKET_NAME || !CDN_BASE_URL) {
     console.error("CRITICAL ERROR: GCS_BUCKET_NAME or CDN_BASE_URL is missing in .env");
@@ -53,25 +58,29 @@ console.log('--------------------------');
 
 // --- Middleware ---
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Increased limit
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 const upload = multer({ storage: multer.memoryStorage() });
 
 // --- Helper Function: Upload to Cloud Storage ---
-async function uploadToCloud(fileBuffer, filename, mimeType) {
+// Now accepts a 'folder' argument
+async function uploadToCloud(fileBuffer, filename, mimeType, folder) {
+    // Construct the key (path) using the folder
+    // e.g., "wax/my-image.webp"
+    const key = `${folder}/${filename}`;
+
     const uploadParams = {
         Bucket: GCS_BUCKET_NAME,
-        Key: filename,
+        Key: key,
         Body: fileBuffer,
         ContentType: mimeType,
-        // ACL: 'public-read', // Use this only if your bucket permissions require explicit ACLs per object
     };
 
     try {
         const command = new PutObjectCommand(uploadParams);
         await s3Client.send(command);
-        // Construct the final public URL using the ENV variable
-        return `${CDN_BASE_URL}/${filename}`;
+        // Construct the final public URL including the folder
+        return `${CDN_BASE_URL}/${key}`;
     } catch (err) {
         console.error("S3 Upload Error:", err);
         throw new Error(`Failed to upload to cloud storage: ${err.message}`);
@@ -118,16 +127,20 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 return res.status(400).json({ success: false, message: 'No image file provided.' });
             }
 
-            // --- Perform Cloud Upload ---
             const file = req.files.image[0];
-            // Generate a clean filename: sku-type-timestamp.webp
             const filename = `${sku}-${type.toLowerCase()}-${Date.now()}.webp`;
             
-            console.log(`[Cloud] Uploading ${filename} to bucket...`);
-            const imageUrl = await uploadToCloud(file.buffer, filename, file.mimetype);
+            // --- [NEW] Determine Folder based on Type ---
+            // type is 'Wax', 'Cast', or 'Final'
+            const typeLower = type.toLowerCase();
+            const targetFolder = FOLDERS[typeLower] || 'misc'; // Default to 'misc' if unknown type
+
+            console.log(`[Cloud] Uploading ${filename} to bucket folder '${targetFolder}'...`);
+            
+            const imageUrl = await uploadToCloud(file.buffer, filename, file.mimetype, targetFolder);
             console.log(`[Cloud] Upload successful. URL: ${imageUrl}`);
             
-            const fieldToUpdate = `${type.toLowerCase()}_image_url`;
+            const fieldToUpdate = `${typeLower}_image_url`;
             updateFields.push(`${fieldToUpdate} = $${paramIndex++}`);
             queryParams.push(imageUrl);
 
@@ -136,8 +149,9 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 const originalFile = req.files.originalImage[0];
                 const preImageFilename = `${sku}-pre-image-${Date.now()}-original.webp`;
                 
-                console.log(`[Cloud] Uploading Pre-Image ${preImageFilename}...`);
-                const preImageUrl = await uploadToCloud(originalFile.buffer, preImageFilename, originalFile.mimetype);
+                // Use the 'pre' folder for Pre-Images
+                console.log(`[Cloud] Uploading Pre-Image ${preImageFilename} to folder '${FOLDERS.pre}'...`);
+                const preImageUrl = await uploadToCloud(originalFile.buffer, preImageFilename, originalFile.mimetype, FOLDERS.pre);
                 
                 updateFields.push(`pre_image_url = $${paramIndex++}`);
                 queryParams.push(preImageUrl);
@@ -148,7 +162,6 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 return res.status(400).json({ success: false, message: 'No description text provided.' });
             }
             
-            // Map the frontend "DescriptionType" to database columns
             const fieldMap = {
                 'Wax_description': 'wax_description',
                 'Cast_description': 'cast_description',
