@@ -34,9 +34,9 @@ const StartScreen: React.FC<StartScreenProps> = ({ onFileSelect }) => {
     >
       <div className="flex flex-col items-center gap-6 animate-fade-in">
         <h1 className="text-5xl font-extrabold tracking-tight text-gray-100 sm:text-6xl md:text-7xl">
-          Design Your Own Jewelry, <span className="text-[#D6B890]">Custom Design</span>.
+          Bring Your Vision to Life, <span className="text-[#D6B890]">Distinctly Designed!</span>
         </h1>
-        <p className="max-w-2xl text-lg text-gray-400 md:text-xl">
+        <p className="max-w-2xl text-lg text-white-400 md:text-xl">
           Retouch photos, apply creative filters, or make professional adjustments using simple text prompts. No complex tools needed.
         </p>
 
@@ -49,39 +49,40 @@ const StartScreen: React.FC<StartScreenProps> = ({ onFileSelect }) => {
                 Upload Images
             </label>
             <input id="image-upload-start" type="file" className="hidden" accept="image/*" onChange={handleFileChange} multiple />
-            <p className="text-sm text-gray-500">or drag and drop files</p>
+            <p className="text-sm text-white-500">Drag OR Drop Files</p>
         </div>
 
         <div className="mt-16 w-full">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-[#D6B890]/10">
                 {/* Card 1 */}
-                <div className="bg-[#722E85]/10 p-6 rounded-lg border border-[#722E85]/30 flex flex-col items-center text-center hover:bg-[#722E85]/20 transition-colors duration-300">
-                    <div className="flex items-center justify-center w-12 h-12 bg-[#722E85]/30 rounded-full mb-4 border border-[#D6B890]/20">
+                <div className="bg-[#D6B890]/10 p-6 rounded-lg border border-[#D6B890]/30 flex flex-col items-center text-center hover:bg-[#D6B890]/20 transition-colors duration-300">
+                    <div className="flex items-center justify-center w-12 h-12 bg-[#D6B890]/30 rounded-full mb-4 border border-[#D6B890]/20">
                        <MagicWandIcon className="w-6 h-6 text-[#D6B890]" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-100">Precise Retouching</h3>
-                    <p className="mt-2 text-gray-400">Click any point on your image to remove blemishes, change colors, or add elements with pinpoint accuracy.</p>
+                    <p className="mt-2 text-white-400">Click any point on your image to remove blemishes, change colors, or add elements with pinpoint accuracy.</p>
                 </div>
 
                 {/* Card 2 */}
-                <div className="bg-[#722E85]/10 p-6 rounded-lg border border-[#722E85]/30 flex flex-col items-center text-center hover:bg-[#722E85]/20 transition-colors duration-300">
-                    <div className="flex items-center justify-center w-12 h-12 bg-[#722E85]/30 rounded-full mb-4 border border-[#D6B890]/20">
+                <div className="bg-[#D6B890]/10 p-6 rounded-lg border border-[#D6B890]/30 flex flex-col items-center text-center hover:bg-[#D6B890]/20 transition-colors duration-300">
+                    <div className="flex items-center justify-center w-12 h-12 bg-[#D6B890]/30 rounded-full mb-4 border border-[#D6B890]/20">
                        <PaletteIcon className="w-6 h-6 text-[#D6B890]" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-100">Creative Filters</h3>
-                    <p className="mt-2 text-gray-400">Transform photos with artistic styles. From vintage looks to futuristic glows, find or create the perfect filter.</p>
+                    <p className="mt-2 text-white-400">Transform photos with artistic styles. From vintage looks to futuristic glows, find or create the perfect filter.</p>
                 </div>
 
                 {/* Card 3 */}
-                <div className="bg-[#722E85]/10 p-6 rounded-lg border border-[#722E85]/30 flex flex-col items-center text-center hover:bg-[#722E85]/20 transition-colors duration-300">
-                    <div className="flex items-center justify-center w-12 h-12 bg-[#722E85]/30 rounded-full mb-4 border border-[#D6B890]/20">
+                <div className="bg-[#D6B890]/10 p-6 rounded-lg border border-[#D6B890]/30 flex flex-col items-center text-center hover:bg-[#D6B890]/20 transition-colors duration-300">
+                    <div className="flex items-center justify-center w-12 h-12 bg-[#D6B890]/30 rounded-full mb-4 border border-[#D6B890]/20">
                        <SunIcon className="w-6 h-6 text-[#D6B890]" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-100">Pro Adjustments</h3>
-                    <p className="mt-2 text-gray-400">Enhance lighting, blur backgrounds, or change the mood. Get studio-quality results without complex tools.</p>
+                    <p className="mt-2 text-white-400">Enhance lighting, blur backgrounds, or change the mood. Get studio-quality results without complex tools.</p>
                 </div>
             </div>
         </div>
+
       </div>
     </div>
   );

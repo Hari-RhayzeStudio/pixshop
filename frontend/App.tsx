@@ -628,7 +628,7 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
         <div className="w-full">
             {activeTab === 'retouch' && (
                 <div className="flex flex-col items-center gap-4">
-                    <p className="text-md text-gray-400">
+                    <p className="text-md text-white-400">
                         {editHotspot ? 'Great! Now describe your localized edit below.' : 'Click an area on the image to make a precise edit.'}
                     </p>
                     <form onSubmit={(e) => { e.preventDefault(); handleGenerate(); }} className="w-full flex items-center gap-2">
