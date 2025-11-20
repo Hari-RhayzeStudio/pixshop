@@ -25,9 +25,7 @@ const fileToPart = async (file: File): Promise<{ inlineData: { mimeType: string;
     return { inlineData: { mimeType, data } };
 };
 
-// Use different API keys for image and text generation models.
-// Assumes API_KEY is for image models and GEMINI_TEXT_API_KEY is for text models.
-// These should be set in your environment configuration.
+// 1. Load API Keys from environment variables
 const API_KEY_IMAGE = import.meta.env.VITE_GEMINI_IMAGE_API_KEY;
 const API_KEY_TEXT = import.meta.env.VITE_GEMINI_TEXT_API_KEY;
 
@@ -98,8 +96,6 @@ export const generateEditedImage = async (
     
     const originalImagePart = await fileToPart(originalImage);
     
-    // We emphasize the resolution in the prompt as a backup, 
-    // but the primary method is sending a square image (see App.tsx changes below).
     const prompt = `You are an expert photo editor AI. Perform a natural, localized edit.
 User Request: "${userPrompt}"
 Edit Location: Focus on pixel coordinates (x: ${hotspot.x}, y: ${hotspot.y}).
@@ -109,9 +105,8 @@ Output: Return ONLY the final edited image. High quality.`;
 
     console.log('Sending image and prompt to the image model...');
     const response: GenerateContentResponse = await imageAI.models.generateContent({
-        model: 'gemini-2.5-flash-image', // Or your working model name
+        model: 'gemini-2.5-flash-image', // working model name
         contents: { parts: [originalImagePart, textPart] },
-        // --- REMOVED THE INVALID CONFIG ---
     });
     console.log('Received response from model.', response);
 
@@ -242,3 +237,4 @@ Output: Return ONLY the text description. Do not add any extra formatting or int
     console.error(`Model response did not contain text.`, { response });
     throw new Error(errorMessage);
 };
+

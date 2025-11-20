@@ -17,9 +17,9 @@ import ImageListPanel from './components/ImageListPanel';
 import SaveModal from './components/SaveModal';
 import { UndoIcon, RedoIcon, EyeIcon, SaveIcon } from './components/icons';
 import StartScreen from './components/StartScreen';
-import { ImageState, ImageType, DescriptionTab } from './types'; // ImageType is 'Wax' | 'Cast' | 'Final'
+import { ImageState, ImageType, DescriptionTab } from './types';
 
-// ... (dataURLtoFile and imageFileToWebPFile helpers are unchanged) ...
+
 const dataURLtoFile = (dataurl: string, filename: string): File => {
     const arr = dataurl.split(',');
     if (arr.length < 2) throw new Error("Invalid data URL");
@@ -82,7 +82,6 @@ const App: React.FC = () => {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [itemToSave, setItemToSave] = useState<ItemToSave | null>(null);
 
-  // --- [NEW] State for the description prompt ---
   const [descriptionTab, setDescriptionTab] = useState<DescriptionTab>('Description');
   const [descriptionPrompt, setDescriptionPrompt] = useState<string>('');
 
@@ -135,12 +134,10 @@ const App: React.FC = () => {
     setCompletedCrop(undefined);
   }, [selectedImageId]);
 
-  // Inside frontend/App.tsx component
 
   const handleFilesUpload = useCallback(async (files: FileList) => {
     setError(null);
     
-    // --- [CHANGED] Process files to force 1024x1024 Square ---
     const processedFilesPromises = Array.from(files).map(async (file) => {
         try {
             // This ensures the input to the AI is 1024x1024, 
@@ -302,7 +299,6 @@ const App: React.FC = () => {
 
   }, [completedCrop, addImageToHistory]);
 
-  // Add this to frontend/App.tsx
 
 // Helper to center-crop and resize any image to exactly 1024x1024
 const resizeToSquare = (imageFile: File): Promise<File> => {
@@ -368,7 +364,7 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
     }
     setIsLoading(true);
     setError(null);
-    // --- [NEW] Set the prompt in state ---
+
     setDescriptionPrompt(prompt); 
     updateSelectedImage(img => ({ ...img, description: null, isDescriptionSaved: false }));
     try {
@@ -388,7 +384,6 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
       setIsSaveModalOpen(true);
   };
   
-  // --- [CHANGED] This function now accepts 'type' as a string ---
   const handleSaveToDb = async (sku: string, type: string) => {
       if (!itemToSave || !currentImage || !selectedImageState) {
           setError("No item selected to save.");
@@ -396,7 +391,6 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
       }
 
       const dataType = itemToSave.type;
-      // --- [CHANGED] Use the *current* description state, which may be edited ---
       const dataToSave = dataType === 'Image' ? currentImage : selectedImageState.description;
 
       if (dataToSave === null || dataToSave === undefined) {
@@ -632,7 +626,7 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
                         {editHotspot ? 'Great! Now describe your localized edit below.' : 'Click an area on the image to make a precise edit.'}
                     </p>
                     <form onSubmit={(e) => { e.preventDefault(); handleGenerate(); }} className="w-full flex items-center gap-2">
-                        <input
+                        <textarea
                             type="text"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
@@ -650,11 +644,27 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
                     </form>
                 </div>
             )}
-            {activeTab === 'crop' && <CropPanel onApplyCrop={handleApplyCrop} onSetAspect={setAspect} isLoading={isLoading} isCropping={!!completedCrop?.width && completedCrop.width > 0} />}
-            {activeTab === 'adjust' && <AdjustmentPanel onApplyAdjustment={handleApplyAdjustment} isLoading={isLoading} />}
-            {activeTab === 'filters' && <FilterPanel onApplyFilter={handleApplyFilter} isLoading={isLoading} />}
+            {activeTab === 'crop' && 
+              <CropPanel 
+                onApplyCrop={handleApplyCrop} 
+                onSetAspect={setAspect} 
+                isLoading={isLoading} 
+                isCropping={!!completedCrop?.width && completedCrop.width > 0} 
+              />
+            }
+            {activeTab === 'adjust' && 
+              <AdjustmentPanel 
+                onApplyAdjustment={handleApplyAdjustment} 
+                isLoading={isLoading} 
+              />
+            }
+            {activeTab === 'filters' && 
+              <FilterPanel 
+                onApplyFilter={handleApplyFilter} 
+                isLoading={isLoading} 
+              />
+            }
             
-            {/* --- [CHANGED] DescribePanel now gets new props --- */}
             {activeTab === 'describe' && 
               <DescribePanel 
                 onGenerate={handleGenerateDescription} 
@@ -739,3 +749,5 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
 };
 
 export default App;
+
+

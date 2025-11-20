@@ -3,26 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-// --- [CHANGED] We no longer import ImageType, as 'type' is more generic ---
 // import { ImageType } from '../types'; 
 
 // The backend server URL.
 // const API_BASE_URL = 'http://localhost:3001';
-// const API_BASE_URL='https://pixshop-backend-hqg9.onrender.com';
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-/**
- * Updates a product in the database by sending data to the backend API.
- * @param sku The product SKU.
- * @param type The type of data ('Wax', 'Cast', 'Final', 'Wax_alt', 'Cast_alt', 'Final_alt').
- * @param dataType The kind of data being saved ('Image' or 'Description').
- * @param data The actual data, either a File object or a string.
- * @param originalFile The original, unedited file for the current image item.
- * @returns A promise that resolves to the backend's response.
- */
 export const updateProductInDB = async (
     sku: string,
-    // --- [CHANGED] This is now a generic string to allow "Wax_alt", etc. ---
     type: string,
     dataType: 'Image' | 'Description',
     data: File | string,
@@ -32,7 +20,7 @@ export const updateProductInDB = async (
 
     const formData = new FormData();
     formData.append('sku', sku);
-    formData.append('type', type); // 'type' is now 'Wax', 'Wax_alt', etc.
+    formData.append('type', type);
     formData.append('dataType', dataType);
 
     if (dataType === 'Image' && data instanceof File) {

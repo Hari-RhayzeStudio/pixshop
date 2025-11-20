@@ -42,7 +42,6 @@ const s3Client = new S3Client({
 const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME;
 const CDN_BASE_URL = process.env.CDN_BASE_URL; 
 
-// --- [NEW] Read Folder Config ---
 const FOLDERS = {
     pre: process.env.GCS_FOLDER_PRE || 'pre',
     wax: process.env.GCS_FOLDER_WAX || 'wax',
