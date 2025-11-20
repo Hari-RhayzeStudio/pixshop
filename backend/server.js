@@ -129,7 +129,6 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
             const file = req.files.image[0];
             const filename = `${sku}-${type.toLowerCase()}-${Date.now()}.webp`;
             
-            // --- [NEW] Determine Folder based on Type ---
             // type is 'Wax', 'Cast', or 'Final'
             const typeLower = type.toLowerCase();
             const targetFolder = FOLDERS[typeLower] || 'misc'; // Default to 'misc' if unknown type
@@ -204,3 +203,4 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
 app.listen(port, () => {
     console.log(`\nBackend server is running at http://localhost:${port}`);
 });
+

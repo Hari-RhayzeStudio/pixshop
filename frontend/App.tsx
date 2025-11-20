@@ -415,7 +415,6 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
               console.log('Conversion to WebP complete.');
           }
           
-          // --- [CHANGED] This call now matches the new modal and databaseService ---
           const result = await updateProductInDB(
             sku,
             type, // This is now a string, e.g., "Wax" or "Wax_alt"
@@ -425,7 +424,7 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
           );
 
           if (result.success) {
-              alert(result.message); // Replace with a better notification system
+              alert(result.message);
               if (dataType === 'Description') {
                   updateSelectedImage(img => ({ ...img, isDescriptionSaved: true }));
               }
