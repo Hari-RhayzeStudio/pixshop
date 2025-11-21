@@ -42,6 +42,43 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
     }
   };
 
+  const applyPreset = (target: string) => {
+    switch (target) {
+        // --- Description Tab Presets ---
+        case 'wax_desc':
+            onPromptChange("Describe the 3D wax model prototype, focusing on the precision, CAD design details, and the green/blue wax material.");
+            break;
+        case 'cast_desc':
+            onPromptChange("Describe the raw metal casting of the jewelry. Focus on the matte/rough texture, the gold/silver material, and the unpolished state.");
+            break;
+        case 'final_desc':
+            onPromptChange("Write a luxurious, commercial product description for the finished, polished jewelry piece. Highlight the craftsmanship, gemstones, and shine.");
+            break;
+
+        // --- Alt Description Tab Presets ---
+        case 'wax_alt':
+            onPromptChange("Write a concise Alt Text for a 3D printed wax model of a jewelry piece.");
+            break;
+        case 'cast_alt':
+            onPromptChange("Write a concise Alt Text for a raw gold/silver metal casting of a jewelry piece.");
+            break;
+        case 'final_alt':
+            onPromptChange("Write a descriptive, SEO-friendly Alt Text for the finished, polished jewelry product.");
+            break;
+
+        // --- Meta Tab Presets ---
+        case 'prod_name':
+            onPromptChange("Generate a concise, commercially attractive Product Name based on this image. Keep it under 50 characters.");
+            break;
+        case 'meta_title':
+            onPromptChange("Write a SEO-optimized Meta Title (under 60 chars) including key product features.");
+            break;
+        case 'meta_desc':
+            onPromptChange("Write a SEO-friendly Meta Description (under 160 chars) with a call to action.");
+            break;
+    }
+  };
+
   return (
     <div className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-6 flex flex-col md:flex-row gap-6 animate-fade-in backdrop-blur-sm">
       {/* Left side: Input */}
@@ -65,8 +102,52 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
           ))}
         </div>
 
-        <p className="text-gray-400 text-sm">
-          Refine your request (e.g., "make it poetic" or "focus on texture").
+        {activeTab === 'Description' && (
+            <div className="flex gap-2 flex-wrap">
+                <button onClick={() => applyPreset('wax_desc')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
+                    Wax desc
+                </button>
+                <button onClick={() => applyPreset('cast_desc')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
+                    Cast desc
+                </button>
+                <button onClick={() => applyPreset('final_desc')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
+                    Final desc
+                </button>
+            </div>
+        )}
+
+        {/* 2. Alt Description Tab Options */}
+        {activeTab === 'Alt Description' && (
+            <div className="flex gap-2 flex-wrap">
+                <button onClick={() => applyPreset('wax_alt')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
+                    Wax Alt
+                </button>
+                <button onClick={() => applyPreset('cast_alt')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
+                    Cast Alt
+                </button>
+                <button onClick={() => applyPreset('final_alt')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
+                    Final Alt
+                </button>
+            </div>
+        )}
+
+        {/* 3. Meta Description Tab Options */}
+        {activeTab === 'Meta Description' && (
+            <div className="flex gap-2 flex-wrap">
+                <button onClick={() => applyPreset('prod_name')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
+                    Product Name
+                </button>
+                <button onClick={() => applyPreset('meta_title')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
+                    Meta Title
+                </button>
+                <button onClick={() => applyPreset('meta_desc')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
+                    Meta Desc
+                </button>
+            </div>
+        )}
+
+        <p className="text-gray-400 text-sm text-align-center">
+          You are under RHAYZE STUDIO servilance.
         </p>
         <textarea
           value={prompt}

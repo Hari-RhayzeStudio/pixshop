@@ -12,7 +12,7 @@ export type DescriptionTab = 'Description' | 'Alt Description' | 'Meta Descripti
 export type DescriptionType = 
     | 'Wax_description' | 'Cast_description' | 'Final_description'
     | 'Wax_alt' | 'Cast_alt' | 'Final_alt'
-    | 'Meta_title' | 'Meta_description';
+    | 'Meta_title' | 'Meta_description' | 'Product_name';
 
 export interface ImageState {
   id: string;

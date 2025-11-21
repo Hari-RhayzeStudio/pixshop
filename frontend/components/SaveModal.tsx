@@ -77,6 +77,7 @@ const SaveModal: React.FC<SaveModalProps> = ({ isOpen, onClose, onSave, itemType
         if (descriptionTab === 'Meta Description') {
             return (
                 <>
+                    <option value="Product_name">Product Name</option>
                     <option value="Meta_title">Meta Title</option>
                     <option value="Meta_description">Meta Description</option>
                 </>

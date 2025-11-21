@@ -353,7 +353,8 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
     } else if (tab === 'Alt Description') {
         setDescriptionPrompt("Write a short alt text describing the visual appearance of the product for accessibility.");
     } else if (tab === 'Meta Description') {
-        setDescriptionPrompt("Write a SEO-friendly meta description including call to action, under 160 characters.");
+        // setDescriptionPrompt("Write a SEO-friendly meta description including call to action, under 160 characters.");
+        setDescriptionPrompt("Choose a target below to generate: Product Name, Meta Title, or Meta Description.");
     }
   };
 

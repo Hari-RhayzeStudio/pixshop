@@ -53,6 +53,19 @@ if (!GCS_BUCKET_NAME || !CDN_BASE_URL) {
     console.error("CRITICAL ERROR: GCS_BUCKET_NAME or CDN_BASE_URL is missing in .env");
 }
 
+// --- Helper: SEO Slugify ---
+const createSeoSlug = (text) => {
+    if (!text) return 'untitled-product';
+    return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')        // Replace spaces with -
+        .replace(/_/g, '-')          // Replace underscores with -
+        .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
+        .replace(/\-\-+/g, '-');     // Replace multiple - with single -
+};
+
 console.log('--------------------------');
 
 // --- Middleware ---
@@ -62,10 +75,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 const upload = multer({ storage: multer.memoryStorage() });
 
 // --- Helper Function: Upload to Cloud Storage ---
-// Now accepts a 'folder' argument
 async function uploadToCloud(fileBuffer, filename, mimeType, folder) {
-    // Construct the key (path) using the folder
-    // e.g., "wax/my-image.webp"
     const key = `${folder}/${filename}`;
 
     const uploadParams = {
@@ -78,7 +88,6 @@ async function uploadToCloud(fileBuffer, filename, mimeType, folder) {
     try {
         const command = new PutObjectCommand(uploadParams);
         await s3Client.send(command);
-        // Construct the final public URL including the folder
         return `${CDN_BASE_URL}/${key}`;
     } catch (err) {
         console.error("S3 Upload Error:", err);
@@ -106,7 +115,8 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
     try {
         client = await pool.connect();
 
-        // 1. SKU Existence Check
+        // 1. SKU Existence Check & Fetch Meta Title
+        // We need the existing record to get the 'meta_title'
         const findQuery = `SELECT * FROM ${PG_TABLE} WHERE sku = $1`;
         const findResult = await client.query(findQuery, [sku]);
 
@@ -126,15 +136,39 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 return res.status(400).json({ success: false, message: 'No image file provided.' });
             }
 
-            const file = req.files.image[0];
-            const filename = `${sku}-${type.toLowerCase()}-${Date.now()}.webp`;
-            
-            // type is 'Wax', 'Cast', or 'Final'
+            // --- [NEW] SEO Filename Logic ---
+            // 1. Get Meta Title from DB (Fallback to product name or 'custom-design' if missing)
+            const metaTitleRaw = product.meta_title;
+            const metaTitleSlug = createSeoSlug(metaTitleRaw);
+            // Check for Meta Title (Required for SEO Filename)
+            if (!product.meta_title) {
+                 return res.status(400).json({ 
+                     success: false, 
+                     message: `Cannot save image: SEO Meta Title is missing for SKU ${sku}. Please generate and save a Meta Title first.` 
+                 });
+            }
+
+            // 2. Determine specific naming pattern based on Type
             const typeLower = type.toLowerCase();
-            const targetFolder = FOLDERS[typeLower] || 'misc'; // Default to 'misc' if unknown type
+            let fileMiddlePart = "design"; // default fallback
+
+            if (typeLower === 'wax') {
+                fileMiddlePart = "wax-prototype";
+            } else if (typeLower === 'cast') {
+                fileMiddlePart = "raw-gold-cast";
+            } else if (typeLower === 'final') {
+                fileMiddlePart = "finished-polish";
+            }
+
+            // 3. Construct the final filename
+            // Pattern: custom-design-${metaTitle}-${specificPart}-${sku}.webp
+            const filename = `custom-design-${metaTitleSlug}-${fileMiddlePart}-${sku}.webp`;
+            
+            const targetFolder = FOLDERS[typeLower] || 'misc'; 
 
             console.log(`[Cloud] Uploading ${filename} to bucket folder '${targetFolder}'...`);
             
+            const file = req.files.image[0];
             const imageUrl = await uploadToCloud(file.buffer, filename, file.mimetype, targetFolder);
             console.log(`[Cloud] Upload successful. URL: ${imageUrl}`);
             
@@ -145,9 +179,9 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
             // Handle Pre-Image Logic
             if (req.files.originalImage && req.files.originalImage[0] && !product.pre_image_url) {
                 const originalFile = req.files.originalImage[0];
-                const preImageFilename = `${sku}-pre-image-${Date.now()}-original.webp`;
+                // Pre-image naming convention
+                const preImageFilename = `custom-design-${metaTitleSlug}-pre-image-${sku}.webp`;
                 
-                // Use the 'pre' folder for Pre-Images
                 console.log(`[Cloud] Uploading Pre-Image ${preImageFilename} to folder '${FOLDERS.pre}'...`);
                 const preImageUrl = await uploadToCloud(originalFile.buffer, preImageFilename, originalFile.mimetype, FOLDERS.pre);
                 
@@ -156,11 +190,13 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
             }
 
         } else if (dataType === 'Description') {
+            // ... (This part remains the same as your code)
             if (!description) {
                 return res.status(400).json({ success: false, message: 'No description text provided.' });
             }
             
             const fieldMap = {
+                'Product_name': 'product_name',
                 'Wax_description': 'wax_description',
                 'Cast_description': 'cast_description',
                 'Final_description': 'final_description',
@@ -203,4 +239,3 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
 app.listen(port, () => {
     console.log(`\nBackend server is running at http://localhost:${port}`);
 });
-
