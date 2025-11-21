@@ -42,13 +42,6 @@ const s3Client = new S3Client({
 const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME;
 const CDN_BASE_URL = process.env.CDN_BASE_URL; 
 
-const FOLDERS = {
-    pre: process.env.GCS_FOLDER_PRE || 'pre',
-    wax: process.env.GCS_FOLDER_WAX || 'wax',
-    cast: process.env.GCS_FOLDER_CAST || 'cast',
-    final: process.env.GCS_FOLDER_FINAL || 'final',
-};
-
 if (!GCS_BUCKET_NAME || !CDN_BASE_URL) {
     console.error("CRITICAL ERROR: GCS_BUCKET_NAME or CDN_BASE_URL is missing in .env");
 }
@@ -60,10 +53,10 @@ const createSeoSlug = (text) => {
         .toString()
         .toLowerCase()
         .trim()
-        .replace(/\s+/g, '-')        // Replace spaces with -
-        .replace(/_/g, '-')          // Replace underscores with -
-        .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
-        .replace(/\-\-+/g, '-');     // Replace multiple - with single -
+        .replace(/\s+/g, '-')        
+        .replace(/_/g, '-')          
+        .replace(/[^\w\-]+/g, '')    
+        .replace(/\-\-+/g, '-');     
 };
 
 console.log('--------------------------');
@@ -75,8 +68,8 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 const upload = multer({ storage: multer.memoryStorage() });
 
 // --- Helper Function: Upload to Cloud Storage ---
-async function uploadToCloud(fileBuffer, filename, mimeType, folder) {
-    const key = `${folder}/${filename}`;
+async function uploadToCloud(fileBuffer, filename, mimeType, folderPath) {
+    const key = `${folderPath}/${filename}`;
 
     const uploadParams = {
         Bucket: GCS_BUCKET_NAME,
@@ -116,7 +109,6 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
         client = await pool.connect();
 
         // 1. SKU Existence Check & Fetch Meta Title
-        // We need the existing record to get the 'meta_title'
         const findQuery = `SELECT * FROM ${PG_TABLE} WHERE sku = $1`;
         const findResult = await client.query(findQuery, [sku]);
 
@@ -136,61 +128,54 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 return res.status(400).json({ success: false, message: 'No image file provided.' });
             }
 
-            // --- [NEW] SEO Filename Logic ---
-            // 1. Get Meta Title from DB (Fallback to product name or 'custom-design' if missing)
             const metaTitleRaw = product.meta_title;
             const metaTitleSlug = createSeoSlug(metaTitleRaw);
-            // Check for Meta Title (Required for SEO Filename)
-            if (!product.meta_title) {
-                 return res.status(400).json({ 
-                     success: false, 
-                     message: `Cannot save image: SEO Meta Title is missing for SKU ${sku}. Please generate and save a Meta Title first.` 
-                 });
-            }
 
-            // 2. Determine specific naming pattern based on Type
+            const categoryRaw = product.category || 'uncategorized';
+            const categorySlug = createSeoSlug(categoryRaw);
+
+            // Construct Folder Path: category/sku
+            const targetFolder = `${categorySlug}/${sku}`; 
+
+            // Determine specific naming pattern based on Type
             const typeLower = type.toLowerCase();
-            let fileMiddlePart = "design"; // default fallback
+            const file = req.files.image[0];
+            let filename = '';
+            let fieldToUpdate = '';
 
-            if (typeLower === 'wax') {
-                fileMiddlePart = "wax-prototype";
-            } else if (typeLower === 'cast') {
-                fileMiddlePart = "raw-gold-cast";
-            } else if (typeLower === 'final') {
-                fileMiddlePart = "finished-polish";
+            // --- Handle Pre-Image separately ---
+            if (typeLower === 'pre') {
+                // Exact filename requirement: sku-pre.webp
+                filename = `${sku}-pre.webp`;
+                fieldToUpdate = 'pre_image_url';
+            } 
+            else {
+                // Check for Meta Title for standard images
+                if (!product.meta_title) {
+                     return res.status(400).json({ 
+                         success: false, 
+                         message: `Cannot save ${type} image: SEO Meta Title is missing for SKU ${sku}. Please generate and save a Meta Title first.` 
+                     });
+                }
+                
+                let fileMiddlePart = "design";
+                if (typeLower === 'wax') fileMiddlePart = "3d-wax-model";
+                else if (typeLower === 'cast') fileMiddlePart = "raw-gold-cast";
+                else if (typeLower === 'final') fileMiddlePart = "finished-polish";
+
+                filename = `custom-design-${metaTitleSlug}-${fileMiddlePart}-${sku}.webp`;
+                fieldToUpdate = `${typeLower}_image_url`;
             }
 
-            // 3. Construct the final filename
-            // Pattern: custom-design-${metaTitle}-${specificPart}-${sku}.webp
-            const filename = `custom-design-${metaTitleSlug}-${fileMiddlePart}-${sku}.webp`;
-            
-            const targetFolder = FOLDERS[typeLower] || 'misc'; 
-
+            // 3. Upload
             console.log(`[Cloud] Uploading ${filename} to bucket folder '${targetFolder}'...`);
-            
-            const file = req.files.image[0];
             const imageUrl = await uploadToCloud(file.buffer, filename, file.mimetype, targetFolder);
             console.log(`[Cloud] Upload successful. URL: ${imageUrl}`);
             
-            const fieldToUpdate = `${typeLower}_image_url`;
             updateFields.push(`${fieldToUpdate} = $${paramIndex++}`);
             queryParams.push(imageUrl);
 
-            // Handle Pre-Image Logic
-            if (req.files.originalImage && req.files.originalImage[0] && !product.pre_image_url) {
-                const originalFile = req.files.originalImage[0];
-                // Pre-image naming convention
-                const preImageFilename = `custom-design-${metaTitleSlug}-pre-image-${sku}.webp`;
-                
-                console.log(`[Cloud] Uploading Pre-Image ${preImageFilename} to folder '${FOLDERS.pre}'...`);
-                const preImageUrl = await uploadToCloud(originalFile.buffer, preImageFilename, originalFile.mimetype, FOLDERS.pre);
-                
-                updateFields.push(`pre_image_url = $${paramIndex++}`);
-                queryParams.push(preImageUrl);
-            }
-
         } else if (dataType === 'Description') {
-            // ... (This part remains the same as your code)
             if (!description) {
                 return res.status(400).json({ success: false, message: 'No description text provided.' });
             }

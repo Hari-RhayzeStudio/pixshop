@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-export type ImageType = 'Wax' | 'Cast' | 'Final';
+export type ImageType = 'Pre' | 'Wax' | 'Cast' | 'Final';
 
 // The tabs available in the Description Panel
 export type DescriptionTab = 'Description' | 'Alt Description' | 'Meta Description';

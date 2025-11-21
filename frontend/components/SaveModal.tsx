@@ -48,6 +48,7 @@ const SaveModal: React.FC<SaveModalProps> = ({ isOpen, onClose, onSave, itemType
         if (itemType === 'Image') {
             return (
                 <>
+                    <option value="Pre">Pre Image</option>
                     <option value="Wax">Wax Image</option>
                     <option value="Cast">Cast Image</option>
                     <option value="Final">Final Image</option>
