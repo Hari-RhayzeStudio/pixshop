@@ -103,7 +103,7 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
         </div>
 
         {activeTab === 'Description' && (
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap flex items-center justify-center">
                 <button onClick={() => applyPreset('wax_desc')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
                     Wax desc
                 </button>
@@ -118,7 +118,7 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
 
         {/* 2. Alt Description Tab Options */}
         {activeTab === 'Alt Description' && (
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap flex items-center justify-center">
                 <button onClick={() => applyPreset('wax_alt')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
                     Wax Alt
                 </button>
@@ -133,7 +133,7 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
 
         {/* 3. Meta Description Tab Options */}
         {activeTab === 'Meta Description' && (
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap flex items-center justify-center">
                 <button onClick={() => applyPreset('prod_name')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
                     Product Name
                 </button>
@@ -146,7 +146,7 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
             </div>
         )}
 
-        <p className="text-gray-400 text-sm text-align-center">
+        <p className="text-gray-400 text-sm flex items-center justify-center">
           You are under RHAYZE STUDIO servilance.
         </p>
         <textarea
