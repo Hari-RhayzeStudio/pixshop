@@ -13,13 +13,21 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const app = express();
 const port = process.env.PORT || 3002;
 
-// --- PostgreSQL Connection Pool ---
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// --- GCS / S3 Client ---
+pool.connect()
+    .then(client => {
+        console.log(`Successfully connected to PostgreSQL! (Database: ${client.database})`);
+        client.release();
+    })
+    .catch(err => {
+        console.error('Failed to connect to PostgreSQL', err);
+        process.exit(1);
+    });
+
 const s3Client = new S3Client({
     region: 'auto',
     endpoint: 'https://storage.googleapis.com', 
@@ -35,6 +43,28 @@ const CDN_BASE_URL = process.env.CDN_BASE_URL;
 if (!GCS_BUCKET_NAME || !CDN_BASE_URL) {
     console.error("CRITICAL ERROR: GCS_BUCKET_NAME or CDN_BASE_URL is missing in .env");
 }
+
+const SEO_KEYWORDS = [
+    "custom-jewelry-design",
+    "personalized-jewelry",
+    "gen-z-jewelry",
+    "modern-jewelry-texas",
+    "bespoke-rings",
+    "custom-necklaces",
+    "unique-engagement-rings",
+    "tailor-made-jewelry",
+    "trendy-jewelry-designs",
+    "jewelry-for-millennials"
+];
+
+const getConsistentKeyword = (sku) => {
+    let numericSku = parseInt(sku.replace(/\D/g, ''), 10);
+    if (isNaN(numericSku)) {
+        numericSku = sku.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    }
+    const index = numericSku % SEO_KEYWORDS.length;
+    return SEO_KEYWORDS[index];
+};
 
 const createSeoSlug = (text) => {
     if (!text) return 'untitled';
@@ -57,6 +87,7 @@ async function uploadToCloud(fileBuffer, filename, mimeType, folderPath) {
         Body: fileBuffer,
         ContentType: mimeType,
     };
+
     try {
         const command = new PutObjectCommand(uploadParams);
         await s3Client.send(command);
@@ -67,9 +98,6 @@ async function uploadToCloud(fileBuffer, filename, mimeType, folderPath) {
     }
 }
 
-// --- API Routes ---
-
-// --- [NEW] GET All Products for Autocomplete ---
 app.get('/api/products', async (req, res) => {
     try {
         const { PG_TABLE } = process.env;
@@ -77,27 +105,8 @@ app.get('/api/products', async (req, res) => {
 
         const client = await pool.connect();
         
-        // We select SKU and calculate how many fields are filled
-        // This helps the frontend determine Green/Orange/Gray status
         const query = `
-            SELECT 
-                sku,
-                category,
-                meta_title,
-                (
-                    (CASE WHEN wax_image_url IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN cast_image_url IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN final_image_url IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN wax_description IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN cast_description IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN final_description IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN wax_image_alt_text IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN cast_image_alt_text IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN final_image_alt_text IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN meta_title IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN meta_description IS NOT NULL THEN 1 ELSE 0 END) +
-                    (CASE WHEN product_name IS NOT NULL THEN 1 ELSE 0 END)
-                ) as filled_count
+            SELECT sku, category, meta_title, status
             FROM ${PG_TABLE}
             ORDER BY category ASC, sku ASC
         `;
@@ -105,22 +114,21 @@ app.get('/api/products', async (req, res) => {
         const result = await client.query(query);
         client.release();
 
-        // Total fields we care about = 12
         const products = result.rows.map(row => {
-            let statusColor = 'normal'; // Gray/Empty
-            const count = parseInt(row.filled_count, 10);
-            
-            if (count >= 12) {
-                statusColor = 'green'; // Full
-            } else if (count > 0) {
-                statusColor = 'orange'; // Partial
+            let statusColor = 'normal';
+            const status = (row.status || '').toLowerCase();
+
+            if (status === 'filled' || status === 'fulfilled') {
+                statusColor = 'green';
+            } else if (status === 'pending') {
+                statusColor = 'orange';
             }
 
             return {
                 sku: row.sku,
                 category: row.category || 'Uncategorized',
                 meta_title: row.meta_title,
-                statusColor // 'green' | 'orange' | 'normal'
+                statusColor
             };
         });
 
@@ -131,16 +139,12 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
-// --- API Routes ---
-
 app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'originalImage', maxCount: 1 }]), async (req, res) => {
-    
     const { sku } = req.params; 
     const { type, dataType, description } = req.body;
     const { PG_TABLE } = process.env;
 
     console.log(`\n[API] Received PATCH request for SKU: ${sku}`);
-    console.log(`[API] Type: ${type}, DataType: ${dataType}`);
 
     if (!PG_TABLE) {
         return res.status(500).json({ success: false, message: "Server config error: PG_TABLE missing." });
@@ -150,7 +154,6 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
     try {
         client = await pool.connect();
 
-        // 1. SKU Existence Check & Fetch Meta Title
         const findQuery = `SELECT * FROM ${PG_TABLE} WHERE sku = $1`;
         const findResult = await client.query(findQuery, [sku]);
 
@@ -159,8 +162,6 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
         }
         
         const product = findResult.rows[0];
-
-        // 2. Prepare Database Update
         const updateFields = []; 
         const queryParams = [sku]; 
         let paramIndex = 2; 
@@ -170,29 +171,18 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 return res.status(400).json({ success: false, message: 'No image file provided.' });
             }
 
-            const metaTitleRaw = product.meta_title;
-            const metaTitleSlug = createSeoSlug(metaTitleRaw);
-
             const categoryRaw = product.category || 'uncategorized';
             const categorySlug = createSeoSlug(categoryRaw);
-
-            // Construct Folder Path: category/sku
             const targetFolder = `${categorySlug}/${sku}`; 
-
-            // Determine specific naming pattern based on Type
             const typeLower = type.toLowerCase();
             const file = req.files.image[0];
             let filename = '';
             let fieldToUpdate = '';
 
-            // --- Handle Pre-Image separately ---
             if (typeLower === 'pre') {
-                // Exact filename requirement: sku-pre.webp
                 filename = `${sku}-pre.webp`;
                 fieldToUpdate = 'pre_image_url';
-            } 
-            else {
-                // Check for Meta Title for standard images
+            } else {
                 if (!product.meta_title) {
                      return res.status(400).json({ 
                          success: false, 
@@ -200,16 +190,18 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                      });
                 }
                 
+                const metaTitleSlug = createSeoSlug(product.meta_title);
+                const seoKeyword = getConsistentKeyword(sku);
                 let fileMiddlePart = "design";
+
                 if (typeLower === 'wax') fileMiddlePart = "3d-wax-model";
                 else if (typeLower === 'cast') fileMiddlePart = "raw-gold-cast";
                 else if (typeLower === 'final') fileMiddlePart = "finished-polish";
 
-                filename = `custom-design-${metaTitleSlug}-${fileMiddlePart}-${sku}.webp`;
+                filename = `${seoKeyword}-${metaTitleSlug}-${fileMiddlePart}-${sku}.webp`;
                 fieldToUpdate = `${typeLower}_image_url`;
             }
 
-            // 3. Upload
             console.log(`[Cloud] Uploading ${filename} to bucket folder '${targetFolder}'...`);
             const imageUrl = await uploadToCloud(file.buffer, filename, file.mimetype, targetFolder);
             console.log(`[Cloud] Upload successful. URL: ${imageUrl}`);
@@ -235,7 +227,6 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
             };
             
             const fieldToUpdate = fieldMap[type]; 
-
             if (!fieldToUpdate) {
                 return res.status(400).json({ success: false, message: `Invalid description type: ${type}` });
             }
@@ -244,15 +235,12 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
             queryParams.push(description);
         }
 
-        // 3. Update 'modified_at'
         updateFields.push(`modified_at = NOW()`);
         
-        // 4. Execute Query
         const updateQuery = `UPDATE ${PG_TABLE} SET ${updateFields.join(', ')} WHERE sku = $1`;
         await client.query(updateQuery, queryParams);
         
         console.log('[DB] Update successful.');
-        
         res.json({ success: true, message: `Successfully updated ${dataType} for SKU "${sku}" (${type}).` });
 
     } catch (error) {
