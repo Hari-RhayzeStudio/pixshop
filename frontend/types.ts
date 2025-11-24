@@ -14,6 +14,15 @@ export type DescriptionType =
     | 'Wax_alt' | 'Cast_alt' | 'Final_alt'
     | 'Meta_title' | 'Meta_description' | 'Product_name';
 
+export type ProductStatus = 'empty' | 'partial' | 'full';
+
+export interface ProductSummary {
+    sku: string;
+    category: string;
+    meta_title: string | null;
+    statusColor: 'green' | 'orange' | 'normal';
+}
+
 export interface ImageState {
   id: string;
   originalFile: File;
@@ -21,4 +30,5 @@ export interface ImageState {
   historyIndex: number;
   description: string | null;
   isDescriptionSaved: boolean;
+  assignedSku?: string;
 }

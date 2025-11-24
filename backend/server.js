@@ -19,17 +19,7 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-pool.connect()
-    .then(client => {
-        console.log(`Successfully connected to PostgreSQL! (Database: ${client.database})`);
-        client.release();
-    })
-    .catch(err => {
-        console.error('Failed to connect to PostgreSQL', err);
-        process.exit(1);
-    });
-
-// --- GCS / S3 Client Initialization ---
+// --- GCS / S3 Client ---
 const s3Client = new S3Client({
     region: 'auto',
     endpoint: 'https://storage.googleapis.com', 
@@ -46,38 +36,27 @@ if (!GCS_BUCKET_NAME || !CDN_BASE_URL) {
     console.error("CRITICAL ERROR: GCS_BUCKET_NAME or CDN_BASE_URL is missing in .env");
 }
 
-// --- Helper: SEO Slugify ---
 const createSeoSlug = (text) => {
-    if (!text) return 'untitled-product';
-    return text
-        .toString()
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, '-')        
-        .replace(/_/g, '-')          
-        .replace(/[^\w\-]+/g, '')    
-        .replace(/\-\-+/g, '-');     
+    if (!text) return 'untitled';
+    return text.toString().toLowerCase().trim()
+        .replace(/[\s_]+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-');
 };
 
-console.log('--------------------------');
-
-// --- Middleware ---
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 const upload = multer({ storage: multer.memoryStorage() });
 
-// --- Helper Function: Upload to Cloud Storage ---
 async function uploadToCloud(fileBuffer, filename, mimeType, folderPath) {
     const key = `${folderPath}/${filename}`;
-
     const uploadParams = {
         Bucket: GCS_BUCKET_NAME,
         Key: key,
         Body: fileBuffer,
         ContentType: mimeType,
     };
-
     try {
         const command = new PutObjectCommand(uploadParams);
         await s3Client.send(command);
@@ -88,6 +67,69 @@ async function uploadToCloud(fileBuffer, filename, mimeType, folderPath) {
     }
 }
 
+// --- API Routes ---
+
+// --- [NEW] GET All Products for Autocomplete ---
+app.get('/api/products', async (req, res) => {
+    try {
+        const { PG_TABLE } = process.env;
+        if (!PG_TABLE) throw new Error("PG_TABLE not configured");
+
+        const client = await pool.connect();
+        
+        // We select SKU and calculate how many fields are filled
+        // This helps the frontend determine Green/Orange/Gray status
+        const query = `
+            SELECT 
+                sku,
+                category,
+                meta_title,
+                (
+                    (CASE WHEN wax_image_url IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN cast_image_url IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN final_image_url IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN wax_description IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN cast_description IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN final_description IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN wax_image_alt_text IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN cast_image_alt_text IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN final_image_alt_text IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN meta_title IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN meta_description IS NOT NULL THEN 1 ELSE 0 END) +
+                    (CASE WHEN product_name IS NOT NULL THEN 1 ELSE 0 END)
+                ) as filled_count
+            FROM ${PG_TABLE}
+            ORDER BY category ASC, sku ASC
+        `;
+
+        const result = await client.query(query);
+        client.release();
+
+        // Total fields we care about = 12
+        const products = result.rows.map(row => {
+            let statusColor = 'normal'; // Gray/Empty
+            const count = parseInt(row.filled_count, 10);
+            
+            if (count >= 12) {
+                statusColor = 'green'; // Full
+            } else if (count > 0) {
+                statusColor = 'orange'; // Partial
+            }
+
+            return {
+                sku: row.sku,
+                category: row.category || 'Uncategorized',
+                meta_title: row.meta_title,
+                statusColor // 'green' | 'orange' | 'normal'
+            };
+        });
+
+        res.json(products);
+    } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ error: "Failed to fetch products" });
+    }
+});
 
 // --- API Routes ---
 

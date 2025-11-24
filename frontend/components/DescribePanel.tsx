@@ -10,7 +10,7 @@ import { DescriptionTab } from '../types';
 
 interface DescribePanelProps {
   onGenerate: (prompt: string) => void;
-  onInitiateSave: () => void;
+  onInitiateSave: (target: string) => void;
   description: string | null;
   isSaved: boolean;
   isLoading: boolean;
@@ -79,6 +79,41 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
     }
   };
 
+  const renderSaveButtons = () => {
+      if (!description || isLoading) return null;
+
+      const btnClass = "flex items-center justify-center gap-2 flex-1 bg-gradient-to-br from-green-600 to-green-500 text-white font-bold py-2 px-3 text-sm rounded-lg transition-all duration-300 shadow-lg hover:shadow-green-500/40 active:scale-95 disabled:opacity-50";
+
+      if (activeTab === 'Description') {
+          return (
+              <div className="flex flex-wrap gap-2 mt-2">
+                  <button onClick={() => onInitiateSave('Wax_description')} className={btnClass}><SaveIcon className="w-4 h-4"/> Save Wax Desc</button>
+                  <button onClick={() => onInitiateSave('Cast_description')} className={btnClass}><SaveIcon className="w-4 h-4"/> Save Cast Desc</button>
+                  <button onClick={() => onInitiateSave('Final_description')} className={btnClass}><SaveIcon className="w-4 h-4"/> Save Final Desc</button>
+              </div>
+          );
+      }
+      if (activeTab === 'Alt Description') {
+          return (
+               <div className="flex flex-wrap gap-2 mt-2">
+                  <button onClick={() => onInitiateSave('Wax_alt')} className={btnClass}><SaveIcon className="w-4 h-4"/> Save Wax Alt</button>
+                  <button onClick={() => onInitiateSave('Cast_alt')} className={btnClass}><SaveIcon className="w-4 h-4"/> Save Cast Alt</button>
+                  <button onClick={() => onInitiateSave('Final_alt')} className={btnClass}><SaveIcon className="w-4 h-4"/> Save Final Alt</button>
+              </div>
+          );
+      }
+      if (activeTab === 'Meta Description') {
+          return (
+               <div className="flex flex-wrap gap-2 mt-2">
+                  <button onClick={() => onInitiateSave('Product_name')} className={btnClass}><SaveIcon className="w-4 h-4"/> Save Name</button>
+                  <button onClick={() => onInitiateSave('Meta_title')} className={btnClass}><SaveIcon className="w-4 h-4"/> Save Title</button>
+                  <button onClick={() => onInitiateSave('Meta_description')} className={btnClass}><SaveIcon className="w-4 h-4"/> Save Meta Desc</button>
+              </div>
+          );
+      }
+      return null;
+  };
+
   return (
     <div className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-6 flex flex-col md:flex-row gap-6 animate-fade-in backdrop-blur-sm">
       {/* Left side: Input */}
@@ -133,7 +168,7 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
 
         {/* 3. Meta Description Tab Options */}
         {activeTab === 'Meta Description' && (
-            <div className="flex gap-2 flex-wrap flex items-center justify-center">
+            <div className="flex gap-2 flex-wrap Z items-center justify-center">
                 <button onClick={() => applyPreset('prod_name')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">
                     Product Name
                 </button>
@@ -178,21 +213,22 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
           className="flex-grow min-h-[150px] bg-gray-900/80 rounded-md p-4 text-gray-300 overflow-y-auto focus:ring-2 focus:ring-blue-500 focus:outline-none transition disabled:opacity-60"
         />
         
-        {description && !isLoading && (
+        {/* {description && !isLoading && (
           <button
-            onClick={onInitiateSave}
+            // onClick={handleSmartSave}
             disabled={isSaved}
             className="flex items-center justify-center gap-2 w-full bg-gradient-to-br from-green-600 to-green-500 text-white font-bold py-3 px-5 rounded-lg transition-all duration-300 ease-in-out shadow-lg shadow-green-500/20 hover:shadow-xl hover:shadow-green-500/40 hover:-translate-y-px active:scale-95 active:shadow-inner text-base disabled:from-green-800 disabled:to-green-700 disabled:shadow-none disabled:cursor-not-allowed disabled:transform-none"
           >
             {isSaved ? <CheckIcon className="w-5 h-5" /> : <SaveIcon className="w-5 h-5" />}
             {isSaved ? 'Saved' : 'Save to DB'}
           </button>
-        )}
+        )} */}
         {isLoading && !description && (
             <div className="flex items-center justify-center h-full">
               <Spinner />
             </div>
         )}
+        {renderSaveButtons()}
       </div>
     </div>
   );

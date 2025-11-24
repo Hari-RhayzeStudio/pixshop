@@ -4,10 +4,25 @@
 */
 
 // import { ImageType } from '../types'; 
+import { ProductSummary } from '../types';
 
 // The backend server URL.
 // const API_BASE_URL = 'http://localhost:3001';
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+export const fetchProductList = async (): Promise<ProductSummary[]> => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/products`);
+        if (!response.ok) {
+            throw new Error("Failed to fetch product list");
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("API: Error fetching products", error);
+        return [];
+    }
+};
+
 
 export const updateProductInDB = async (
     sku: string,
