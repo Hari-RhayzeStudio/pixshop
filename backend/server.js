@@ -49,12 +49,16 @@ const SEO_KEYWORDS = [
     "personalized-jewelry",
     "gen-z-jewelry",
     "modern-jewelry-texas",
-    "bespoke-rings",
-    "custom-necklaces",
-    "unique-engagement-rings",
+    "bespoke-jewelry",
+    "custom-jewelry",
+    "unique-engagement-jewelry",
     "tailor-made-jewelry",
     "trendy-jewelry-designs",
-    "jewelry-for-millennials"
+    "jewelry-for-millennials",
+    "handcrafted-jewelry",
+    "custom-made-engagement-jewelry",
+    "custom-design-bridal-jewelry",
+    "custom-created-promise-jewelry"
 ];
 
 const getConsistentKeyword = (sku) => {
@@ -198,7 +202,7 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 else if (typeLower === 'cast') fileMiddlePart = "raw-gold-cast";
                 else if (typeLower === 'final') fileMiddlePart = "finished-polish";
 
-                filename = `${seoKeyword}-${metaTitleSlug}-${fileMiddlePart}-${sku}.webp`;
+                filename = `${seoKeyword}-${metaTitleSlug}-${fileMiddlePart}-cd-${sku}.webp`;
                 fieldToUpdate = `${typeLower}_image_url`;
             }
 
