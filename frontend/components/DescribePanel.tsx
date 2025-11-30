@@ -29,22 +29,38 @@ const PRESETS = {
         { 
             id: 'Sketch_description', 
             label: 'Sketch', 
-            prompt: "Write a short, engaging description (max 150 characters) for this jewelry design sketch and keep in mind for SEO enhancement. **Start the text by choosing ONE of these exciting hooks: 'From imagination to reality:', 'The vision begins:', 'Artistry in motion:', 'Blueprint of beauty:', 'A new idea:', 'Designed with love:', 'The first step:', 'Dream to design:', 'A creative spark:', 'Behind the scenes:', 'Your custom look:', 'Drawing the dream:', 'Paper to precious:', or 'Starting the journey:'.** Focus on the artistic vision and the custom design blueprint." 
+            prompt: `Write a short, engaging description (max 150 characters) for this jewelry design sketch. 
+            
+            1. **Hook:** Start with ONE of: 'From imagination to reality:', 'The vision begins:', 'Artistry in motion:', 'Blueprint of beauty:', 'A new idea:', 'Designed with love:', 'The first step:', 'Dream to design:', 'A creative spark:', 'Behind the scenes:', 'Your custom look:', 'Drawing the dream:', 'Paper to precious:', or 'Starting the journey:'.
+            2. **Grammar Rule:** Do NOT start the next word with "This" or "The". Instead, start directly with the subject (e.g., "Custom lines...", "Hand-drawn details...") or a verb.
+            3. **SEO Focus:** Mention 'custom jewelry design', 'concept', and 'bespoke'. Use simple English.` 
         },
         { 
             id: 'Wax_description', 
             label: 'Wax', 
-            prompt: "Write a short description (max 150 characters) for this 3D printed wax prototype and keep in mind for SEO enhancement. **Start the text by choosing ONE of these hooks: 'Precision in progress:', 'Taking shape:', 'The mold of perfection:', 'Craftsmanship in 3D:', 'Almost ready:', 'See every detail:', 'A perfect fit:', '3D printed art:', 'Ready for casting:', 'The shape of style:', 'Model perfection:', 'Getting real:', 'Exact precision:', or 'The design comes alive:'.** Describe the intricate detail of this mold-ready model. **Do NOT say it is ready to wear.**" 
+            prompt: `Write a short description (max 150 characters) for this 3D printed wax prototype.
+            
+            1. **Hook:** Start with ONE of: 'Precision in progress:', 'Taking shape:', 'The mold of perfection:', 'Craftsmanship in 3D:', 'Almost ready:', 'See every detail:', 'A perfect fit:', '3D printed art:', 'Ready for casting:', 'The shape of style:', 'Model perfection:', 'Getting real:', 'Exact precision:', or 'The design comes alive:'.
+            2. **Grammar Rule:** Do NOT start the next word with "This" or "The". Start with the material or a descriptive word (e.g., "Green wax captures...", "Every curve shows...").
+            3. **SEO Focus:** Use keywords like '3D printed wax', 'jewelry prototype', and 'CAD design'. Emphasize it is a mold-ready model, NOT ready to wear.` 
         },
         { 
             id: 'Cast_description', 
             label: 'Cast', 
-            prompt: "Write a short description (max 150 characters) for this raw metal casting and keep in mind for SEO enhancement. **Start the text by choosing ONE of these hooks: 'Raw and authentic:', 'Fresh from the fire:', 'The metal emerges:', 'Unpolished potential:', 'Solid metal style:', 'Freshly made:', 'Real craftsmanship:', 'Authentic texture:', 'The real thing:', 'Made by hand:', 'Straight from the workshop:', 'Pure metal:', 'The foundation:', or 'Hand casted:'.** Describe the matte, unpolished texture fresh from the mold. **Do NOT imply it is finished.**" 
+            prompt: `Write a short description (max 150 characters) for this raw metal casting.
+            
+            1. **Hook:** Start with ONE of: 'Polished and authentic:', 'Fresh from the fire:', 'The metal emerges:', 'Unpolished potential:', 'Solid metal style:', 'Freshly made:', 'Real craftsmanship:', 'Authentic texture:', 'The real thing:', 'Made by hand:', 'Straight from the workshop:', 'Pure metal:', 'The foundation:', or 'Hand casted:'.
+            2. **Grammar Rule:** Do NOT start the next word with "This" or "The". Start with the metal type or texture (e.g., "Solid gold emerges...", "Matte silver texture...").
+            3. **SEO Focus:** Mention 'rough casting', 'unpolished', and the specific metal Gold. Describe the matte texture. Do NOT imply it is finished.` 
         },
         { 
             id: 'Final_description', 
             label: 'Final', 
-            prompt: "Write a persuasive, luxurious product description (max 60 words) and keep in mind for SEO enhancement. **Start the text by choosing ONE of these exciting hooks: 'Introducing:', 'Behold the brilliance:', 'Radiance revealed:', 'The masterpiece arrives:', 'Shine bright:', 'Ready to wear:', 'Simply stunning:', 'Your new favorite:', 'Pure elegance:', 'Look at this:', 'Time to shine:', 'Luxury for you:', 'Catch the light:', or 'Unforgettable style:'.** Focus on the sparkle, heirloom quality, and the emotion of wearing this finished piece." 
+            prompt: `Write a persuasive, luxurious product description (max 150 characters).
+            
+            1. **Hook:** Start with ONE of: 'Introducing:', 'Behold the brilliance:', 'Radiance revealed:', 'The masterpiece arrives:', 'Shine bright:', 'Ready to wear:', 'Simply stunning:', 'Your new favorite:', 'Pure elegance:', 'Look at this:', 'Time to shine:', 'Luxury for you:', 'Catch the light:', or 'Unforgettable style:'.
+            2. **Grammar Rule:** Do NOT start the next word with "This" or "The". Start with an adjective or the jewelry type (e.g., "Sparkling diamonds...", "Handcrafted perfection...", "Heirloom quality...").
+            3. **SEO Focus:** Naturally include the Metal, Stone type, and Style. Focus on emotion and sparkle.` 
         },
     ],
     'Alt Description': [
