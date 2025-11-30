@@ -559,13 +559,13 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
     setTargetImageType(target); // Update global state
     switch (target) {
         case 'Sketch':
-            setPrompt("Create a detailed hand-drawn jewelry sketch with pencil shading.");
+            setPrompt(" Create a clean jewelry design sketch of this attached product in the picture on white paper using black ink. Show detailed outlines, proportions, and stone layout with clear linework. No color, no shading—just a professional hand-drawn design in multiple angles.");
             break;
         case 'Wax':
-            setPrompt("Edit this to look like a blue/green wax 3D printed jewelry model.");
+            setPrompt("Provide a jewelry 3D Model wax prototype image in light/sky blue before stones are set.");
             break;
         case 'Cast':
-            setPrompt("Edit this to look like a raw, unpolished gold/silver metal casting.");
+            setPrompt("Provide a jewelry casting/investment image before stones are set.");
             break;
         case 'Final':
             setPrompt("Edit this to look like a highly polished, finished jewelry piece with gems.");
