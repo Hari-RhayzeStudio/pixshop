@@ -196,6 +196,7 @@ const ProductSelectorPanel: React.FC<ProductSelectorPanelProps> = ({
                         className={`${selectClasses}`}
                     >
                         <option value="Pre">Pre (Concept)</option>
+                        <option value="Sketch">Sketch</option>
                         <option value="Wax">Wax</option>
                         <option value="Cast">Cast</option>
                         <option value="Final">Final</option>

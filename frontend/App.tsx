@@ -364,12 +364,12 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
     setDescriptionTab(tab);
     // Set context-aware default prompts
     if (tab === 'Description') {
-        setDescriptionPrompt("Write a concise, engaging product description highlighting key features.");
+        setDescriptionPrompt("");
     } else if (tab === 'Alt Description') {
-        setDescriptionPrompt("Write a short alt text describing the visual appearance of the product for accessibility.");
+        setDescriptionPrompt("");
     } else if (tab === 'Meta Description') {
         // setDescriptionPrompt("Write a SEO-friendly meta description including call to action, under 160 characters.");
-        setDescriptionPrompt("Choose a target below to generate: Product Name, Meta Title, or Meta Description.");
+        setDescriptionPrompt("");
     }
   };
 
@@ -538,23 +538,29 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
     setEditHotspot({ x: originalX, y: originalY });
  };
  
- const applyRetouchPreset = (target: string) => {
-    switch (target) {
-        case 'wax':
-            setPrompt("Edit this area to look like a detailed, 3D printed blue/green wax model.");
-            break;
-        case 'cast':
-            setPrompt("Edit this area to look like a raw, unpolished metal casting (gold or silver).");
-            break;
-        case 'final':
-            setPrompt("Edit this area to look like a fully polished, shiny, finished jewelry piece with gems set.");
-            break;
-    }
-  };
+//  const applyRetouchPreset = (target: string) => {
+//     switch (target) {
+//         case 'sketch':
+//             setPrompt("Edit this area to look like a detailed, 3D printed blue/green wax model.");
+//             break;
+//         case 'wax':
+//             setPrompt("Edit this area to look like a detailed, 3D printed blue/green wax model.");
+//             break;
+//         case 'cast':
+//             setPrompt("Edit this area to look like a raw, unpolished metal casting (gold or silver).");
+//             break;
+//         case 'final':
+//             setPrompt("Edit this area to look like a fully polished, shiny, finished jewelry piece with gems set.");
+//             break;
+//     }
+//   };
 
   const applyTargetPreset = (target: string) => {
     setTargetImageType(target); // Update global state
     switch (target) {
+        case 'Sketch':
+            setPrompt("Create a detailed hand-drawn jewelry sketch with pencil shading.");
+            break;
         case 'Wax':
             setPrompt("Edit this to look like a blue/green wax 3D printed jewelry model.");
             break;
@@ -685,11 +691,12 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
         <div className="w-full p-0 gap-1">
             {activeTab === 'retouch' && (
                 <div className="flex flex-col items-center gap-4">
-                    <div className="flex gap-2 flex-wrap">
+                    {/* <div className="flex gap-2 flex-wrap">
+                        <button onClick={() => applyRetouchPreset('sketch')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">Sketch</button>
                         <button onClick={() => applyRetouchPreset('wax')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">Wax</button>
                         <button onClick={() => applyRetouchPreset('cast')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">Cast</button>
                         <button onClick={() => applyRetouchPreset('final')} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1.5 rounded-full transition-colors border border-gray-600 font-medium">Final</button>
-                    </div>
+                    </div> */}
                     {/* <p className="text-md text-white-400">
                         {editHotspot ? 'Great! Now describe your localized edit below.' : 'Click an area on the image to make a precise edit.'}
                     </p> */}

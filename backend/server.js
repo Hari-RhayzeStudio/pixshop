@@ -198,7 +198,8 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
                 const seoKeyword = getConsistentKeyword(sku);
                 let fileMiddlePart = "design";
 
-                if (typeLower === 'wax') fileMiddlePart = "3d-wax-model";
+                if (typeLower === 'sketch') fileMiddlePart = "concept-sketch-drawing";
+                else if (typeLower === 'wax') fileMiddlePart = "3d-wax-model";
                 else if (typeLower === 'cast') fileMiddlePart = "raw-gold-cast";
                 else if (typeLower === 'final') fileMiddlePart = "finished-polish";
 
@@ -220,6 +221,8 @@ app.patch('/api/products/:sku', upload.fields([{ name: 'image', maxCount: 1 }, {
             
             const fieldMap = {
                 'Product_name': 'product_name',
+                'Sketch_description': 'sketch_description',
+                'Sketch_alt': 'sketch_image_alt_text',
                 'Wax_description': 'wax_description',
                 'Cast_description': 'cast_description',
                 'Final_description': 'final_description',
