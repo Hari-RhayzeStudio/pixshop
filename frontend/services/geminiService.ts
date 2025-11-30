@@ -197,10 +197,16 @@ export const generateDescription = async (
     console.log(`Starting description generation for prompt: "${userPrompt}"`);
     
     const originalImagePart = await fileToPart(originalImage);
-    const prompt = `You are a creative assistant. Based on the provided image and the user's request, generate a concise and compelling description.
-User Request: "${userPrompt}"
+    const prompt = `You are an expert jewelry copywriter and SEO specialist. 
+    Based on the provided image and the user's request ("${userPrompt}"), generate a persuasive product description.
 
-Output: Return ONLY the text description. Do not add any extra formatting or introductory phrases.`;
+    Follow these strict guidelines:
+    1. **Language:** Use simple, clear, and engaging English (Grade 8 reading level). Avoid complex jargon or overly flowery words.
+    2. **SEO:** Naturally include key details (Metal type, Stone type, Style, Color) as keywords for search engines.
+    3. **Customer Journey:** Focus on the visual beauty, how it feels to wear it, and the perfect occasion for it (e.g., "perfect for daily wear," "an ideal anniversary gift").
+    4. **Format:** concise paragraph (2-3 sentences).
+
+    Output: Return ONLY the text description. Do not add formatting, introductory phrases, or quotes.`;
     const textPart = { text: prompt };
 
     console.log('Sending image and prompt to the text model for description...');

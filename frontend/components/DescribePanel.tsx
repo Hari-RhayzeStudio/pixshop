@@ -26,21 +26,65 @@ const descriptionTabs: DescriptionTab[] = ['Description', 'Alt Description', 'Me
 // Configuration for the Preset Buttons
 const PRESETS = {
     'Description': [
-        { id: 'Sketch_description', label: 'Sketch', prompt: "Describe the hand-drawn sketch or digital concept drawing. Focus on the artistic lines, shading, and initial design intent." },
-        { id: 'Wax_description', label: 'Wax', prompt: "Describe the 3D wax model prototype, focusing on the precision, CAD design details, and the green/blue wax material." },
-        { id: 'Cast_description', label: 'Cast', prompt: "Describe the raw metal casting of the jewelry. Focus on the matte/rough texture, the gold/silver material, and the unpolished state." },
-        { id: 'Final_description', label: 'Final', prompt: "Write a luxurious, commercial product description for the finished, polished jewelry piece. Highlight the craftsmanship, gemstones, and shine." },
+        { 
+            id: 'Sketch_description', 
+            label: 'Sketch', 
+            prompt: "Write a short, engaging description (max 150 characters) for this jewelry design sketch and keep in mind for SEO enhancement. **Start the text by choosing ONE of these exciting hooks: 'From imagination to reality:', 'The vision begins:', 'Artistry in motion:', 'Blueprint of beauty:', 'A new idea:', 'Designed with love:', 'The first step:', 'Dream to design:', 'A creative spark:', 'Behind the scenes:', 'Your custom look:', 'Drawing the dream:', 'Paper to precious:', or 'Starting the journey:'.** Focus on the artistic vision and the custom design blueprint." 
+        },
+        { 
+            id: 'Wax_description', 
+            label: 'Wax', 
+            prompt: "Write a short description (max 150 characters) for this 3D printed wax prototype and keep in mind for SEO enhancement. **Start the text by choosing ONE of these hooks: 'Precision in progress:', 'Taking shape:', 'The mold of perfection:', 'Craftsmanship in 3D:', 'Almost ready:', 'See every detail:', 'A perfect fit:', '3D printed art:', 'Ready for casting:', 'The shape of style:', 'Model perfection:', 'Getting real:', 'Exact precision:', or 'The design comes alive:'.** Describe the intricate detail of this mold-ready model. **Do NOT say it is ready to wear.**" 
+        },
+        { 
+            id: 'Cast_description', 
+            label: 'Cast', 
+            prompt: "Write a short description (max 150 characters) for this raw metal casting and keep in mind for SEO enhancement. **Start the text by choosing ONE of these hooks: 'Raw and authentic:', 'Fresh from the fire:', 'The metal emerges:', 'Unpolished potential:', 'Solid metal style:', 'Freshly made:', 'Real craftsmanship:', 'Authentic texture:', 'The real thing:', 'Made by hand:', 'Straight from the workshop:', 'Pure metal:', 'The foundation:', or 'Hand casted:'.** Describe the matte, unpolished texture fresh from the mold. **Do NOT imply it is finished.**" 
+        },
+        { 
+            id: 'Final_description', 
+            label: 'Final', 
+            prompt: "Write a persuasive, luxurious product description (max 60 words) and keep in mind for SEO enhancement. **Start the text by choosing ONE of these exciting hooks: 'Introducing:', 'Behold the brilliance:', 'Radiance revealed:', 'The masterpiece arrives:', 'Shine bright:', 'Ready to wear:', 'Simply stunning:', 'Your new favorite:', 'Pure elegance:', 'Look at this:', 'Time to shine:', 'Luxury for you:', 'Catch the light:', or 'Unforgettable style:'.** Focus on the sparkle, heirloom quality, and the emotion of wearing this finished piece." 
+        },
     ],
     'Alt Description': [
-        { id: 'Sketch_alt', label: 'Sketch', prompt: "Write a concise Alt Text for a preliminary jewelry design sketch." },
-        { id: 'Wax_alt', label: 'Wax', prompt: "Write a concise Alt Text for a 3D printed wax model of a jewelry piece." },
-        { id: 'Cast_alt', label: 'Cast', prompt: "Write a concise Alt Text for a raw gold/silver metal casting of a jewelry piece." },
-        { id: 'Final_alt', label: 'Final', prompt: "Write a descriptive, SEO-friendly Alt Text for the finished, polished jewelry product." },
+        { 
+            id: 'Sketch_alt', 
+            label: 'Sketch Alt', 
+            prompt: "Generate SEO-friendly Alt Text (max 125 chars). Format: 'Concept sketch for [Jewelry Type] showing custom design details'." 
+        },
+        { 
+            id: 'Wax_alt', 
+            label: 'Wax Alt', 
+            prompt: "Generate SEO-friendly Alt Text (max 125 chars). Format: '3D printed wax prototype for custom [Jewelry Type] casting'." 
+        },
+        { 
+            id: 'Cast_alt', 
+            label: 'Cast Alt', 
+            prompt: "Generate SEO-friendly Alt Text (max 125 chars). Format: 'Polished metal casting of [Jewelry Type] before final polishing'." 
+        },
+        { 
+            id: 'Final_alt', 
+            label: 'Final Alt', 
+            prompt: "Generate SEO-friendly Alt Text (max 125 chars). Format: 'Finished [Jewelry Type] in [Metal] featuring [Gemstone/Design] details'." 
+        },
     ],
     'Meta Description': [
-        { id: 'Product_name', label: 'Product Name', prompt: "Generate a concise, commercially attractive Product Name based on this image. Keep it under 50 characters." },
-        { id: 'Meta_title', label: 'Meta Title', prompt: "Write a SEO-optimized Meta Title (under 60 chars) including key product features." },
-        { id: 'Meta_description', label: 'Meta Desc', prompt: "Write a SEO-friendly Meta Description (under 160 chars) with a call to action." },
+        { 
+            id: 'Product_name', 
+            label: 'Prod Name', 
+            prompt: "Generate a clickable, SEO-rich Product Name (max 60 chars). Include the Metal, Stone, and Style (e.g., '18k Gold Custom Diamond Halo Ring')." 
+        },
+        { 
+            id: 'Meta_title', 
+            label: 'Meta Title', 
+            prompt: "Write a Google Search Meta Title (max 60 chars). Formula: [Product Name] | [Brand keyword like 'Custom Jewelry' or 'Handcrafted']." 
+        },
+        { 
+            id: 'Meta_description', 
+            label: 'Meta Desc', 
+            prompt: "Write a high-converting Meta Description (max 155 chars). Summarize the jewelry piece and end with a call to action like 'CUSTOMIZE YOURS' OR  'DESIGN YOURS' OR 'GET A QUOTE' OR 'INQUIRE NOW' OR 'FREE CONSULTATION' OR 'START CREATING'." 
+        },
     ]
 };
 
