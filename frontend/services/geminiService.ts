@@ -201,11 +201,11 @@ export const generateDescription = async (
     Based on the provided image and the user's request ("${userPrompt}"), generate a persuasive product description.
 
     Follow these strict guidelines:
-    1. **Language:** Use simple, clear, and engaging English (Grade 8 reading level). Avoid complex jargon or overly flowery words.
-    2. **SEO:** Naturally include key details (Metal type, Stone type, Style, Color) as keywords for search engines.
-    3. **Customer Journey:** Focus on the visual beauty, how it feels to wear it, and the perfect occasion for it (e.g., "perfect for daily wear," "an ideal anniversary gift").
-    4. **Format:** concise paragraph (2-3 sentences).
-
+    1. Focus on SEO optimization to improve search engine rankings.
+    2. Google search engine should put this description at top. So give description like that.
+    3. Keep it concise and engaging.
+    4. Keep it in mind, I am selling custom jewelry products online.
+    5. Do not mention the image or AI in the description. Keep the response in simple words.
     Output: Return ONLY the text description. Do not add formatting, introductory phrases, or quotes.`;
     const textPart = { text: prompt };
 

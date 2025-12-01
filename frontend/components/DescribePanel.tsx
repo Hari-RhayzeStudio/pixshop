@@ -67,39 +67,39 @@ const PRESETS = {
         { 
             id: 'Sketch_alt', 
             label: 'Sketch Alt', 
-            prompt: "Generate SEO-friendly Alt Text (max 125 chars). Format: 'Concept sketch for [Jewelry Type] showing custom design details'." 
+            prompt: "STRICT OUTPUT RULE: Maximum 120 characters. No intro text. Generate high-SEO Alt Text for a jewelry sketch." 
         },
         { 
             id: 'Wax_alt', 
             label: 'Wax Alt', 
-            prompt: "Generate SEO-friendly Alt Text (max 125 chars). Format: '3D printed wax prototype for custom [Jewelry Type] casting'." 
+            prompt: "STRICT OUTPUT RULE: Maximum 120 characters. No intro text. Generate high-SEO Alt Text for a wax model."
         },
         { 
             id: 'Cast_alt', 
             label: 'Cast Alt', 
-            prompt: "Generate SEO-friendly Alt Text (max 125 chars). Format: 'Polished metal casting of [Jewelry Type] before final polishing'." 
+            prompt: "STRICT OUTPUT RULE: Maximum 120 characters. No intro text. Generate high-SEO Alt Text for a raw casting. " 
         },
         { 
             id: 'Final_alt', 
             label: 'Final Alt', 
-            prompt: "Generate SEO-friendly Alt Text (max 125 chars). Format: 'Finished [Jewelry Type] in [Metal] featuring [Gemstone/Design] details'." 
+            prompt: "STRICT OUTPUT RULE: Maximum 120 characters. No intro text. Generate high-SEO Alt Text for the finished product." 
         },
     ],
     'Meta Description': [
         { 
             id: 'Product_name', 
             label: 'Prod Name', 
-            prompt: "Generate a clickable, SEO-rich Product Name (max 60 chars). Include the Metal, Stone, and Style (e.g., '18k Gold Custom Diamond Halo Ring')." 
+            prompt: "Generate a clickable, SEO-rich Product Name. OUTPUT RULE: Maximum 60 characters." 
         },
         { 
             id: 'Meta_title', 
             label: 'Meta Title', 
-            prompt: "Write a Google Search Meta Title (max 60 chars). Formula: [Product Name] | [Brand keyword like 'Custom Jewelry' or 'Handcrafted']." 
+            prompt: "Write a Google Search Meta Title (max 50 characters). OUTPUT RULE: Maximum 60 characters." 
         },
         { 
             id: 'Meta_description', 
             label: 'Meta Desc', 
-            prompt: "Write a high-converting Meta Description (max 155 chars). Summarize the jewelry piece and end with a call to action like 'CUSTOMIZE YOURS' OR  'DESIGN YOURS' OR 'GET A QUOTE' OR 'INQUIRE NOW' OR 'FREE CONSULTATION' OR 'START CREATING'." 
+            prompt: "Write a high-converting Meta Description (max 150 characters). Summarize the jewelry piece and end with a call to action like 'CUSTOMIZE YOURS' OR  'DESIGN YOURS' OR 'GET A QUOTE' OR 'INQUIRE NOW' OR 'FREE CONSULTATION' OR 'START CREATING'." 
         },
     ]
 };
