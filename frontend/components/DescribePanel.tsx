@@ -87,14 +87,14 @@ const PRESETS = {
     ],
     'Meta Description': [
         { 
-            id: 'Product_name', 
-            label: 'Prod Name', 
-            prompt: "Generate a clickable, SEO-rich Product Name. OUTPUT RULE: Maximum 60 characters." 
-        },
-        { 
             id: 'Meta_title', 
             label: 'Meta Title', 
             prompt: "Write a Google Search Meta Title (max 50 characters). OUTPUT RULE: Maximum 60 characters." 
+        },
+        { 
+            id: 'Product_name', 
+            label: 'Prod Name', 
+            prompt: "Generate a clickable, SEO-rich Product Name. OUTPUT RULE: Maximum 60 characters." 
         },
         { 
             id: 'Meta_description', 
@@ -126,8 +126,7 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
       const defaults = PRESETS[activeTab];
       if (defaults && defaults.length > 0) {
           setSelectedTarget(defaults[0].id);
-          // Optional: Auto-fill prompt on tab change if empty? 
-          // Currently keeping it empty to let user choose.
+          onPromptChange(defaults[0].prompt);
       }
   }, [activeTab]);
 
@@ -141,11 +140,7 @@ const DescribePanel: React.FC<DescribePanelProps> = ({
   const handlePresetClick = (targetId: string, defaultPrompt: string) => {
       setSelectedTarget(targetId);
       
-      // Only fill the prompt if it's currently empty
-      // This allows users to select a target without losing their custom text
-      if (!prompt.trim()) {
-          onPromptChange(defaultPrompt);
-      }
+      onPromptChange(defaultPrompt);
   };
 
   // Format target ID for display (e.g. "Wax_description" -> "Wax Description")
