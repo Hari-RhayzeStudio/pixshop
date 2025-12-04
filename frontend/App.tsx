@@ -97,7 +97,7 @@ const App: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSku, setSelectedSku] = useState<string>('');
 
-  const [targetImageType, setTargetImageType] = useState<string>('Wax');
+  const [targetImageType, setTargetImageType] = useState<string>('Pre');
 
   // ... (useEffect hooks are unchanged) ...
   useEffect(() => {
