@@ -5,6 +5,7 @@
 
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { ProductSummary } from '../types';
+import { RefreshIcon } from './icons';
 
 interface ProductSelectorPanelProps {
     products: ProductSummary[];
@@ -14,6 +15,8 @@ interface ProductSelectorPanelProps {
     setSelectedSku: (sku: string) => void;
     targetType?: string; 
     setTargetType?: (type: string) => void;
+    onRefresh: () => void;
+    isRefreshing: boolean;
 }
 
 const ProductSelectorPanel: React.FC<ProductSelectorPanelProps> = ({
@@ -23,7 +26,9 @@ const ProductSelectorPanel: React.FC<ProductSelectorPanelProps> = ({
     selectedSku,
     setSelectedSku,
     targetType,
-    setTargetType
+    setTargetType,
+    onRefresh,
+    isRefreshing
 }) => {
     // State for custom SKU dropdown
     const [isSkuDropdownOpen, setIsSkuDropdownOpen] = useState(false);
@@ -96,9 +101,20 @@ const ProductSelectorPanel: React.FC<ProductSelectorPanelProps> = ({
     return (
         <div className="w-full bg-gray-800/60 border border-[#722E85]/50 rounded-lg p-4 flex flex-col sm:flex-row gap-4 items-end sm:items-center animate-fade-in backdrop-blur-sm mb-4 relative z-20">
             
-            {/* Category Selector (Standard Select) */}
+            {/* Category Selector */}
             <div className="flex flex-col w-full sm:w-1/3">
-                <label className="text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">Category</label>
+                <div className="flex justify-between items-center mb-1">
+                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Category</label>
+                     {/* --- [NEW] Refresh Button --- */}
+                     <button 
+                        onClick={onRefresh} 
+                        disabled={isRefreshing}
+                        className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                        title="Refresh Product List"
+                     >
+                        <RefreshIcon className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                     </button>
+                </div>
                 <select 
                     value={selectedCategory} 
                     onChange={(e) => {
@@ -115,11 +131,9 @@ const ProductSelectorPanel: React.FC<ProductSelectorPanelProps> = ({
                 </select>
             </div>
 
-            {/* SKU Selector (Custom Searchable Dropdown) */}
+            {/* SKU Selector (Unchanged logic, just keeping structure) */}
             <div className="flex flex-col w-full sm:w-1/3 relative" ref={skuDropdownRef}>
                 <label className="text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">SKU</label>
-                
-                {/* Trigger Button (Looks like a select input) */}
                 <div 
                     className={`${selectClasses} cursor-pointer flex items-center justify-between ${!selectedCategory ? disabledClasses : ''}`}
                     onClick={() => selectedCategory && setIsSkuDropdownOpen(!isSkuDropdownOpen)}
@@ -137,50 +151,25 @@ const ProductSelectorPanel: React.FC<ProductSelectorPanelProps> = ({
                             <span className="text-gray-400">-- Select SKU --</span>
                         )}
                     </div>
-                    {/* Chevron Icon */}
                     <svg className={`w-4 h-4 text-gray-400 transition-transform ${isSkuDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
-
-                {/* Dropdown Menu */}
                 {isSkuDropdownOpen && (
                     <div className="absolute top-full left-0 w-full mt-1 bg-gray-900 border border-[#722E85] rounded-md shadow-2xl z-50 overflow-hidden flex flex-col">
-                        {/* Sticky Search Input */}
                         <div className="p-2 border-b border-gray-700 bg-gray-900 sticky top-0 z-10">
-                            <input 
-                                type="text" 
-                                value={skuSearchTerm}
-                                onChange={(e) => setSkuSearchTerm(e.target.value)}
-                                placeholder="Search SKU..." 
-                                className="w-full bg-gray-800 text-white text-sm px-2 py-1.5 rounded border border-gray-600 focus:border-[#D6B890] outline-none"
-                                autoFocus
-                            />
+                            <input type="text" value={skuSearchTerm} onChange={(e) => setSkuSearchTerm(e.target.value)} placeholder="Search SKU..." className="w-full bg-gray-800 text-white text-sm px-2 py-1.5 rounded border border-gray-600 focus:border-[#D6B890] outline-none" autoFocus />
                         </div>
-
-                        {/* Scrollable List (Max ~5 items height) */}
                         <div className="max-h-[180px] overflow-y-auto"> 
                             {processedSkus.length > 0 ? (
                                 processedSkus.map(prod => (
-                                    <div 
-                                        key={prod.sku}
-                                        onClick={() => {
-                                            setSelectedSku(prod.sku);
-                                            setIsSkuDropdownOpen(false);
-                                        }}
-                                        className={`px-3 py-2 text-sm cursor-pointer flex items-center gap-3 hover:bg-gray-800 transition-colors ${selectedSku === prod.sku ? 'bg-gray-800' : ''}`}
-                                    >
-                                        {/* Status Dot */}
+                                    <div key={prod.sku} onClick={() => { setSelectedSku(prod.sku); setIsSkuDropdownOpen(false); }} className={`px-3 py-2 text-sm cursor-pointer flex items-center gap-3 hover:bg-gray-800 transition-colors ${selectedSku === prod.sku ? 'bg-gray-800' : ''}`}>
                                         <div className={`w-3 h-3 flex-shrink-0 rounded-full ${getStatusColor(prod.statusColor)}`}></div>
-                                        
-                                        {/* SKU & Title */}
                                         <div className="flex flex-col truncate">
                                             <span className="text-white font-mono">{prod.sku}</span>
                                             {prod.meta_title && <span className="text-xs text-gray-500 truncate">{prod.meta_title}</span>}
                                         </div>
                                     </div>
                                 ))
-                            ) : (
-                                <div className="px-3 py-2 text-sm text-gray-500 text-center">No SKUs found</div>
-                            )}
+                            ) : ( <div className="px-3 py-2 text-sm text-gray-500 text-center">No SKUs found</div> )}
                         </div>
                     </div>
                 )}
@@ -190,11 +179,7 @@ const ProductSelectorPanel: React.FC<ProductSelectorPanelProps> = ({
             {setTargetType && (
                 <div className="flex flex-col w-full sm:w-1/3">
                     <label className="text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">Target</label>
-                    <select 
-                        value={targetType} 
-                        onChange={(e) => setTargetType(e.target.value)}
-                        className={`${selectClasses}`}
-                    >
+                    <select value={targetType} onChange={(e) => setTargetType(e.target.value)} className={`${selectClasses}`}>
                         <option value="Pre">Pre (Concept)</option>
                         <option value="Sketch">Sketch</option>
                         <option value="Wax">Wax</option>
@@ -204,13 +189,9 @@ const ProductSelectorPanel: React.FC<ProductSelectorPanelProps> = ({
                 </div>
             )}
 
-            {/* Detailed Status Indicator (Visible when SKU selected) */}
             {selectedSku && currentProduct && (
                 <div className="flex flex-col items-center justify-center ml-2 pb-2 sm:pb-0">
-                    <div 
-                        className={`w-4 h-4 rounded-full ${getStatusColor(currentProduct.statusColor)}`} 
-                        title={`Status: ${currentProduct.statusColor}`}
-                    ></div>
+                    <div className={`w-4 h-4 rounded-full ${getStatusColor(currentProduct.statusColor)}`} title={`Status: ${currentProduct.statusColor}`}></div>
                 </div>
             )}
         </div>

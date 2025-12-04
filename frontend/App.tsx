@@ -94,6 +94,7 @@ const App: React.FC = () => {
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
 
   const [productList, setProductList] = useState<ProductSummary[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSku, setSelectedSku] = useState<string>('');
 
@@ -136,6 +137,18 @@ const App: React.FC = () => {
     setImages(prevImages => prevImages.map(img =>
       img.id === selectedImageId ? updater(img) : img
     ));
+  };
+
+  const handleRefreshProducts = async () => {
+    setIsRefreshing(true);
+    try {
+        const products = await fetchProductList();
+        setProductList(products);
+    } catch (err) {
+        console.error("Failed to refresh products", err);
+    } finally {
+        setIsRefreshing(false);
+    }
   };
 
   const addImageToHistory = useCallback((newImageFile: File) => {
@@ -685,6 +698,8 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
                 // Pass target type controls
                 targetType={targetImageType}
                 setTargetType={applyTargetPreset} // Setting type also sets prompt
+                onRefresh={handleRefreshProducts}
+                isRefreshing={isRefreshing}
             />
         </div>
         
