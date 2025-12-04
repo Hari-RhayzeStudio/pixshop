@@ -571,7 +571,7 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
             setPrompt("Edit this to look like a highly polished, finished jewelry piece with gems.");
             break;
         case 'Pre':
-            setPrompt("Create a concept sketch or pre-visualization of this design.");
+            setPrompt("Save the PRE image as is without changes.");
             break;
     }
   };
