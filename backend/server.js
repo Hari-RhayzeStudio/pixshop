@@ -45,20 +45,26 @@ if (!GCS_BUCKET_NAME || !CDN_BASE_URL) {
 }
 
 const SEO_KEYWORDS = [
-    "custom-jewelry-design",
+    "custom-jewelry",
     "personalized-jewelry",
-    "gen-z-jewelry",
-    "modern-jewelry-texas",
+    "modern-texas",
     "bespoke-jewelry",
     "custom-jewelry",
-    "unique-engagement-jewelry",
+    "unique-engagement",
     "tailor-made-jewelry",
-    "trendy-jewelry-designs",
-    "jewelry-for-millennials",
+    "trendy-jewelry",
     "handcrafted-jewelry",
-    "custom-made-engagement-jewelry",
-    "custom-design-bridal-jewelry",
-    "custom-created-promise-jewelry"
+    "custom-engagement",
+    "custom-bridal",
+    "custom-promise-jewelry",
+    "rich-aesthetic",
+    "luxury-jewelry",
+    "premium-quality",
+    "design-your-own",
+    "millennial-style",
+    "trending-jewelry",
+    "best-selling",
+    "top-rated",
 ];
 
 const getConsistentKeyword = (sku) => {
