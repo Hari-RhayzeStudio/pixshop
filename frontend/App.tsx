@@ -348,14 +348,27 @@ const resizeToSquare = (imageFile: File): Promise<File> => {
                 return;
             }
 
-            // Calculate center crop
-            const scale = Math.max(1024 / img.naturalWidth, 1024 / img.naturalHeight);
-            const x = (1024 / 2) - (img.naturalWidth / 2) * scale;
-            const y = (1024 / 2) - (img.naturalHeight / 2) * scale;
+            // --- NEW LOGIC ---
+            // Calculate scale factor to fit the entire image within 1024x1024
+            const scale = Math.min(1024 / img.naturalWidth, 1024 / img.naturalHeight);
+            
+            // Calculate new width and height
+            const newWidth = img.naturalWidth * scale;
+            const newHeight = img.naturalHeight * scale;
+
+            // Calculate centered position
+            const x = (1024 - newWidth) / 2;
+            const y = (1024 - newHeight) / 2;
+            // -----------------
+
+            // Fill with a background color (optional, but good practice for PNGs)
+            ctx.fillStyle = '#ffffff'; 
+            ctx.fillRect(0, 0, 1024, 1024);
 
             // Draw high quality
             ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, x, y, img.naturalWidth * scale, img.naturalHeight * scale);
+            // Draw the image scaled and centered
+            ctx.drawImage(img, x, y, newWidth, newHeight);
 
             // Convert back to File
             canvas.toBlob((blob) => {
